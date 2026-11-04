@@ -48,5 +48,5 @@ Requires Firefox Desktop 140 or later. Provider coverage and regional availabili
 - Privacy: https://github.com/noumenonnn/numera-widget/blob/main/PRIVACY.md
 - Icon: `public/icons/numera-128.png`.
 - Screenshots: `docs/screenshots/toolbar-popup.png` is captured from the 1.0.8 browser test with deterministic sample rates; it is an illustration, not a current market quote.
-- License: All rights reserved for original project materials; retain third-party notices.
+- License: MIT for original code and documentation only. The Numera name, logo, extension icons, brand artwork, and wheel sticker are excluded and require prior written permission for reuse; retain third-party notices.
 - Release notes: `docs/releases/1.0.8.md`.

@@ -67,6 +67,6 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Report se
 
 ## Rights and third-party software
 
-Third-party licenses and attribution are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and shipped in `public/licenses/`. Numera's own code and supplied brand/sticker assets remain under their respective owners' rights; see [LICENSE](LICENSE). No blanket open-source license is granted for those materials.
+Numera's original code and documentation are available under the [MIT License](LICENSE). The Numera name, logo, extension icons, brand artwork, and wheel sticker are excluded; use, copying, modification, or redistribution requires prior written permission from the relevant rights holder. Third-party licenses and attribution are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and shipped in `public/licenses/`.
 
 ![Numera 1.0.8 toolbar popup with sample rates](docs/screenshots/toolbar-popup.png)

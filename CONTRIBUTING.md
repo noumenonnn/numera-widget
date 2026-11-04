@@ -6,4 +6,4 @@ Open an issue with a concise reproduction, expected behavior, Firefox version, a
 
 Dependency security overrides are documented in `vendor/README.md`. Update their source and archive together and run the tooling regression tests. Use `npm run audit:dependencies` to check the dependency tree against the registry.
 
-This repository does not currently grant a general open-source license for its own code or artwork. Discuss reuse or licensing with the owner before relying on it in another project.
+Numera's original code and documentation are licensed under MIT; see LICENSE. Contributions to those materials are provided under the same license. The Numera name, logo, extension icons, brand artwork, and wheel sticker are excluded and require prior written permission for reuse. Third-party components retain their own licenses.

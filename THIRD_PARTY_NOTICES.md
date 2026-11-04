@@ -10,7 +10,7 @@ The packaged extension contains copies of the relevant license texts in `license
 - Unicode CLDR currency names, Unicode License: `licenses/unicode.txt` (https://unicode.org/license.txt).
 - React and React DOM, MIT: `licenses/react.txt` and `licenses/react-dom.txt`.
 - Motion, MIT: `licenses/motion.md`; lossless-json, MIT: `licenses/lossless-json.md`.
-- Numera brand asset and wheel sticker supplied through the linked Figma design; rights remain with their respective owners.
+- Numera name, logo, extension icons, brand artwork, and wheel sticker: all rights reserved by their respective owners; excluded from MIT. No use, copying, modification, or redistribution without prior written permission.
 
 Build and test dependencies are listed in `package-lock.json`; their own package license files are available after `npm ci`.
 

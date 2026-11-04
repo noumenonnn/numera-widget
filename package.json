@@ -64,5 +64,6 @@
   "overrides": {
     "deepmerge": "$deepmerge",
     "minimatch": "$minimatch"
-  }
+  },
+  "license": "MIT"
 }
