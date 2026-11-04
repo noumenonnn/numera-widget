@@ -1,5 +1,7 @@
 export const tr = {
   ru: {
+    converter: "Конвертер валют",
+    refresh: "Обновить курсы",
     tabs: { fiat: "Валюты", crypto: "Крипто" },
     refreshFailed: "Не удалось обновить курсы. Повторите попытку",
     cacheUnavailable: "Не удалось прочитать или сохранить кэш курсов",
@@ -56,6 +58,8 @@ export const tr = {
     resultRange: "Результат вне диапазона",
   },
   en: {
+    converter: "Currency converter",
+    refresh: "Refresh rates",
     tabs: { fiat: "Fiat", crypto: "Crypto" },
     refreshFailed: "Could not refresh rates. Try again",
     cacheUnavailable: "Could not read or save the rate cache",

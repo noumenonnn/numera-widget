@@ -107,3 +107,33 @@ export function parseKraken(text: string): string {
     throw Error("invalid ticker");
   return result;
 }
+
+/** Kraken quotes are already denominated in USDT, like the Binance quotes. */
+export function parseKrakenMarket(text: string): {
+  q: string;
+  prices: Record<string, string>;
+} {
+  const data = JSON.parse(text);
+  if (
+    !Array.isArray(data?.error) ||
+    data.error.length ||
+    !data.result ||
+    typeof data.result !== "object" ||
+    Array.isArray(data.result)
+  )
+    throw Error("invalid Kraken ticker");
+  const price = (pair: string): string => {
+    const raw = data.result[pair]?.c?.[0];
+    const value = typeof raw === "string" ? positive(raw) : null;
+    if (!value) throw Error(`invalid Kraken ticker: ${pair}`);
+    return value;
+  };
+  return {
+    q: price("USDTZUSD"),
+    prices: Object.fromEntries(
+      catalog
+        .filter((c) => c.krakenPair)
+        .map((c) => [c.code, price(c.krakenPair!)]),
+    ),
+  };
+}

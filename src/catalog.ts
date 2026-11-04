@@ -9,8 +9,11 @@ export type Currency = {
   symbols: string[];
   icon: string;
   metadataSource: string;
+  /** Provider currency used for a local denomination with the same value. */
+  fxCode?: string;
   binanceAsset?: string;
   pair?: string;
+  krakenPair?: string;
 };
 const f = (
   code: string,
@@ -34,6 +37,7 @@ const c = (
   en: string,
   ru: string,
   aliases: string[] = [],
+  krakenPair?: string,
 ): Currency => ({
   id: `crypto:${code}`,
   kind: "crypto",
@@ -42,9 +46,10 @@ const c = (
   aliases,
   symbols: [],
   icon: `assets/${code}.svg`,
-  metadataSource: "Manually curated asset identity; Web3 Icons; Binance",
-  binanceAsset: code,
-  pair: code === "USDT" ? undefined : `${code}USDT`,
+  metadataSource: `Manually curated asset identity; Web3 Icons; ${krakenPair ? "Kraken" : "Binance"}`,
+  binanceAsset: krakenPair ? undefined : code,
+  pair: krakenPair || code === "USDT" ? undefined : `${code}USDT`,
+  krakenPair,
 });
 const extraSymbols: Record<string, string[]> = {
   ARS: ["$"],
@@ -139,6 +144,12 @@ export const catalog: Currency[] = [
   ...fiatExtra.map(([code, en, ru, flag]) =>
     f(code, en, ru, flag, [], extraSymbols[code] || []),
   ),
+  {
+    ...f("TVD", "Tuvaluan Dollar (AUD 1:1)", "Доллар Тувалу (AUD 1:1)", "tv"),
+    fxCode: "AUD",
+    metadataSource:
+      "AUD denomination; https://www.dfat.gov.au/geo/tuvalu/tuvalu-country-brief; flag-icons",
+  },
   c("BTC", "Bitcoin", "Биткоин", ["биткоина", "биткоинов", "bitcoin"]),
   c("ETH", "Ethereum", "Эфириум", ["эфир", "эфира", "ethereum"]),
   c("USDT", "Tether USD", "Tether USD", ["tether"]),
@@ -147,6 +158,37 @@ export const catalog: Currency[] = [
   c("SOL", "Solana", "Solana"),
   c("XRP", "XRP", "XRP"),
   c("TRX", "Tron", "Tron"),
+  c("AAVE", "Aave", "Aave"),
+  c("ADA", "Cardano", "Cardano"),
+  c("APE", "ApeCoin", "ApeCoin"),
+  c("APT", "Aptos", "Aptos"),
+  c("ARB", "Arbitrum", "Arbitrum"),
+  c("AVAX", "Avalanche", "Avalanche"),
+  c("BCH", "Bitcoin Cash", "Bitcoin Cash"),
+  c("DASH", "Dash", "Dash"),
+  c("DOGE", "Dogecoin", "Dogecoin"),
+  c("ETC", "Ethereum Classic", "Ethereum Classic"),
+  c("FIL", "Filecoin", "Filecoin"),
+  c("HBAR", "Hedera", "Hedera"),
+  {
+    ...c("INJ", "Injective", "Injective"),
+    metadataSource:
+      "Injective official brand assets: https://injective.com/brand; Binance",
+  },
+  c("LINK", "Chainlink", "Chainlink"),
+  c("LTC", "Litecoin", "Litecoin"),
+  c("LUNA", "Terra", "Terra"),
+  c("LUNC", "Terra Classic", "Terra Classic"),
+  c("PEPE", "Pepe", "Pepe"),
+  c("SHIB", "Shiba Inu", "Shiba Inu"),
+  c("UNI", "Uniswap", "Uniswap"),
+  c("VET", "VeChain", "VeChain"),
+  c("XAUT", "Tether Gold", "Tether Gold"),
+  c("XLM", "Stellar", "Stellar"),
+  c("ZEC", "Zcash", "Zcash"),
+  c("ZIL", "Zilliqa", "Zilliqa"),
+  c("TON", "Toncoin", "Тонкоин", ["тон", "toncoin"], "TONUSDT"),
+  c("XMR", "Monero", "Монеро", ["monero"], "XMRUSDT"),
 ];
 const currenciesByCode = new Map(
   catalog.map((currency) => [currency.code, currency]),
@@ -158,3 +200,5 @@ export const tables: Record<Kind, string[]> = {
 };
 export const normalize = (x: string) =>
   x.normalize("NFKC").toLocaleLowerCase().replace(/ё/g, "е").trim();
+
+export const rateTable = [...tables.fiat, "BTC", "ETH", "USDT"];

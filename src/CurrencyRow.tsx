@@ -9,8 +9,8 @@ import {
   type ReactNode,
 } from "react";
 import type { Parsed } from "./engine";
-import type { Row, State } from "./state";
-import type { Kind } from "./catalog";
+import type { Scope, Row, State } from "./state";
+
 import { AnimatePresence } from "motion/react";
 
 export type RowContext = {
@@ -18,7 +18,7 @@ export type RowContext = {
   code: string;
   index: number;
   locale: State["locale"];
-  kind: Kind;
+  kind: Scope;
   fetching: boolean;
   status: string;
   active: boolean;

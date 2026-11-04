@@ -1,6 +1,7 @@
 import { byCode, type Kind } from "./catalog";
 import { convert, parseInput, type Rates } from "./engine";
 export type Row = { rowId: string; code: string };
+export type Scope = Kind | "converter";
 export type Tab = {
   rows: Row[];
   anchor: { code: string; amount: string };
@@ -12,11 +13,12 @@ export type State = {
   tab: Kind;
   fiat: Tab;
   crypto: Tab;
+  converter: Tab;
 };
 /** Preserve structural identity across IPC clones and optimistic acknowledgements. */
 export function reconcileState(current: State | null, next: State): State {
   if (!current) return next;
-  const tab = (kind: Kind): Tab => {
+  const tab = (kind: Scope): Tab => {
     const old = current[kind],
       incoming = next[kind];
     const rows =
@@ -41,28 +43,30 @@ export function reconcileState(current: State | null, next: State): State {
   };
   const fiat = tab("fiat"),
     crypto = tab("crypto");
+  const converter = tab("converter");
   return fiat === current.fiat &&
+    converter === current.converter &&
     crypto === current.crypto &&
     current.locale === next.locale &&
     current.theme === next.theme &&
     current.tab === next.tab
     ? current
-    : { ...next, fiat, crypto };
+    : { ...next, fiat, crypto, converter };
 }
 export type Action =
   | { type: "locale"; locale: State["locale"] }
   | { type: "theme"; theme: State["theme"] }
   | { type: "tab"; kind: Kind }
-  | { type: "expand"; kind: Kind; expanded: boolean }
-  | { type: "add"; kind: Kind; row: Row }
-  | { type: "replace"; kind: Kind; rowId: string; code: string }
-  | { type: "input"; kind: Kind; rowId: string; code: string; amount: string }
-  | { type: "remove"; kind: Kind; rowId: string }
-  | { type: "restoreRow"; kind: Kind; row: Row; index: number }
-  | { type: "move"; kind: Kind; rowId: string; targetIndex: number }
+  | { type: "expand"; kind: Scope; expanded: boolean }
+  | { type: "add"; kind: Scope; row: Row }
+  | { type: "replace"; kind: Scope; rowId: string; code: string }
+  | { type: "input"; kind: Scope; rowId: string; code: string; amount: string }
+  | { type: "remove"; kind: Scope; rowId: string }
+  | { type: "restoreRow"; kind: Scope; row: Row; index: number }
+  | { type: "move"; kind: Scope; rowId: string; targetIndex: number }
   | {
       type: "undoReplace";
-      kind: Kind;
+      kind: Scope;
       rowId: string;
       expected: string;
       previous: string;
@@ -70,7 +74,7 @@ export type Action =
     }
   | {
       type: "transfer";
-      kind: Kind;
+      kind: Scope;
       code: string;
       amount: string;
       rowId: string;
@@ -83,6 +87,11 @@ export function initial(
   return {
     locale: language.toLowerCase().startsWith("ru") ? "ru" : "en",
     theme: "system",
+    converter: {
+      rows: [row("RUB"), row("USD")],
+      anchor: { code: "RUB", amount: "1" },
+      expanded: false,
+    },
     tab: "fiat",
     fiat: {
       rows: [row("RUB"), row("USD")],
@@ -96,8 +105,10 @@ export function initial(
     },
   };
 }
-const validCode = (code: unknown, kind: Kind): code is string =>
-  typeof code === "string" && byCode(code)?.kind === kind;
+const validCode = (code: unknown, kind: Scope): code is string =>
+  typeof code === "string" &&
+  !!byCode(code) &&
+  (kind === "converter" || byCode(code).kind === kind);
 export const validAmount = (x: unknown): x is string =>
   typeof x === "string" &&
   /^-?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(x) &&
@@ -106,7 +117,7 @@ export function restoreState(raw: unknown, language?: string): State {
   const d = initial(language);
   if (!raw || typeof raw !== "object") return d;
   const source = raw as Partial<State>;
-  const restoreTab = (x: unknown, kind: Kind): Tab => {
+  const restoreTab = (x: unknown, kind: Scope): Tab => {
     const fallback = d[kind];
     if (!x || typeof x !== "object") return fallback;
     const v = x as Partial<Tab>;
@@ -146,6 +157,20 @@ export function restoreState(raw: unknown, language?: string): State {
       expanded: typeof v.expanded === "boolean" ? v.expanded : false,
     };
   };
+  const fiat = restoreTab(source.fiat, "fiat");
+  const crypto = restoreTab(source.crypto, "crypto");
+  const primary = source.tab === "crypto" ? crypto : fiat;
+  const secondary = source.tab === "crypto" ? fiat : crypto;
+  const merged = {
+    ...primary,
+    rows: [
+      ...primary.rows,
+      ...secondary.rows.filter(
+        (r) =>
+          !primary.rows.some((p) => p.code === r.code || p.rowId === r.rowId),
+      ),
+    ],
+  };
   return {
     locale:
       source.locale === "ru" || source.locale === "en"
@@ -158,8 +183,9 @@ export function restoreState(raw: unknown, language?: string): State {
         ? source.theme
         : d.theme,
     tab: source.tab === "fiat" || source.tab === "crypto" ? source.tab : d.tab,
-    fiat: restoreTab(source.fiat, "fiat"),
-    crypto: restoreTab(source.crypto, "crypto"),
+    fiat,
+    crypto,
+    converter: restoreTab(source.converter || merged, "converter"),
   };
 }
 export function replaceRow(
@@ -298,7 +324,7 @@ export function reduceState(s: State, a: Action, rates: Rates): State {
         : [...old.rows, { rowId: a.rowId, code: a.code }];
       return {
         ...s,
-        tab: a.kind,
+        tab: a.kind === "converter" ? s.tab : a.kind,
         [a.kind]: { ...old, rows, anchor: { code: a.code, amount: a.amount } },
       };
     }

@@ -26,7 +26,8 @@ const exchange = JSON.stringify({
 const fx = '[{"base":"USD","quote":"RUB","date":"2026-11-02","rate":100}]';
 const prices =
   '[{"symbol":"BTCUSDT","price":"50000"},{"symbol":"ETHUSDT","price":"2500"}]';
-const kraken = '{"error":[],"result":{"USDTZUSD":{"c":["0.99"]}}}';
+const kraken =
+  '{"error":[],"result":{"USDTZUSD":{"c":["0.99"]},"TONUSDT":{"c":["2"]},"XMRUSDT":{"c":["150"]}}}';
 it("classifies provider schema errors separately from network failures", async () => {
   const service = createRateService({
     storage: memory(),
@@ -316,7 +317,7 @@ describe("shared rate service", () => {
     const next = await service.refresh("crypto");
     expect(count - before).toBe(1);
     expect(next.error).toContain("429");
-    expect(next.crypto).toEqual(emptyRates.crypto);
+    expect(next.crypto).toEqual({ ...emptyRates.crypto, TON: "2", XMR: "150" });
   });
   it("updates only confirmed symbols and preserves timestamps of missing prices", async () => {
     let now = 1000000,

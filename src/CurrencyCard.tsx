@@ -1,8 +1,8 @@
 import type { Dispatch, SetStateAction, RefObject } from "react";
 import { motion } from "motion/react";
 import { ChevronsUpDown } from "lucide-react";
-import { byCode, type Kind } from "./catalog";
-import type { Row, State, Action } from "./state";
+import { byCode } from "./catalog";
+import type { Scope, Row, State, Action } from "./state";
 import type { Parsed } from "./engine";
 import { RowInput } from "./CurrencyRow";
 import { gestureOutcome } from "./gestures";
@@ -59,7 +59,7 @@ export function CurrencyCard({
   i: number;
   rows: Row[];
   locale: State["locale"];
-  kind: Kind;
+  kind: Scope;
   p?: Parsed;
   active: boolean;
   status: "ready" | "stale" | "unavailable";
@@ -79,7 +79,12 @@ export function CurrencyCard({
   shake: (element: HTMLElement | null) => void;
   setNotice: Set<Notice | null>;
   dispatch: (action: Action) => boolean;
-  updateRow: (kind: Kind, rowId: string, code: string, amount?: string) => void;
+  updateRow: (
+    kind: Scope,
+    rowId: string,
+    code: string,
+    amount?: string,
+  ) => void;
   setProblems: Set<Record<string, Parsed>>;
   setFocus: Set<string | null>;
   setViewPicker: (picker: Picker) => void;
@@ -331,26 +336,29 @@ export function CurrencyCard({
           {t.invalid}
         </span>
       )}
-      {p?.status === "valid" && p.currency && p.currency.kind !== kind && (
-        <button
-          className="error"
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => {
-            const c = p.currency!;
-            const kind = c.kind;
-            dispatch({
-              type: "transfer",
-              kind,
-              code: c.code,
-              amount: p.amount,
-              rowId: crypto.randomUUID(),
-            });
-            setFocus(null);
-          }}
-        >
-          {t.switch}
-        </button>
-      )}
+      {p?.status === "valid" &&
+        p.currency &&
+        kind !== "converter" &&
+        p.currency.kind !== kind && (
+          <button
+            className="error"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
+              const c = p.currency!;
+              const kind = c.kind;
+              dispatch({
+                type: "transfer",
+                kind,
+                code: c.code,
+                amount: p.amount,
+                rowId: crypto.randomUUID(),
+              });
+              setFocus(null);
+            }}
+          >
+            {t.switch}
+          </button>
+        )}
     </motion.div>
   );
 }

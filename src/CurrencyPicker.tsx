@@ -8,13 +8,14 @@ import {
   useMotionValueEvent,
   useReducedMotion,
 } from "motion/react";
-import { catalog, normalize, type Kind, type Currency } from "./catalog";
-import type { Row, State } from "./state";
+import { normalize, type Currency } from "./catalog";
+import { currencyGroup, pickerCurrencies } from "./currency-groups";
+import type { Scope, Row, State } from "./state";
 import { advanceSticker } from "./gestures";
 import { createWheelInput } from "./wheel-input";
 import { tr } from "./i18n";
 export type Picker = {
-  kind: Kind;
+  kind: Scope;
   target?: string;
   returnView: "main" | "settings";
 };
@@ -36,7 +37,7 @@ export function CurrencyPicker({
   const t = tr[locale];
   const [query, setQuery] = useState("");
   const [index, setIndex] = useState(() => {
-    const list = catalog.filter((currency) => currency.kind === picker.kind);
+    const list = pickerCurrencies;
     const current = rows.find((row) => row.rowId === picker.target)?.code;
     return Math.max(
       0,
@@ -70,8 +71,7 @@ export function CurrencyPicker({
     return () => clearTimeout(timer);
   }, []);
   const options = picker
-    ? catalog
-        .filter((c) => c.kind === picker.kind)
+    ? pickerCurrencies
         .filter(
           (c) =>
             !query ||
@@ -253,6 +253,11 @@ export function CurrencyPicker({
             onChoose(options[safeIndex]);
         }}
       >
+        {options[safeIndex] && (
+          <div className="wheel-category" aria-live="polite" aria-atomic="true">
+            {currencyGroup(options[safeIndex])[locale === "ru" ? "ru" : "name"]}
+          </div>
+        )}
         {options.length ? (
           Array.from(
             { length: Math.min(11, options.length) },

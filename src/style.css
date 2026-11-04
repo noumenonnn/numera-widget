@@ -74,6 +74,10 @@ summary:focus-visible {
   max-height: 600px;
   min-height: 360px;
 }
+.app[data-view="settings"],
+.app[data-view="settings"] .surface {
+  min-height: 0;
+}
 header {
   min-height: 32px;
   display: flex;
@@ -106,7 +110,7 @@ button {
   display: grid;
   place-items: center;
   background: var(--card);
-  border-radius: 10px;
+  border-radius: 50%;
 }
 .scroll {
   overflow-y: auto;
@@ -247,6 +251,37 @@ button:disabled {
 h1 {
   font-size: 20px;
   margin: 0;
+  font-weight: 500;
+}
+header h1 {
+  flex: 1;
+  line-height: 26px;
+}
+.wheel-category {
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 16px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 14px;
+  z-index: 2;
+  pointer-events: none;
+}
+.rate-currency-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rate-list .rate-currency-name small {
+  font-size: inherit;
+}
+.rate-list strong {
+  flex-shrink: 0;
   font-weight: 400;
 }
 .settings-header h1 {
@@ -336,7 +371,7 @@ h1 {
 }
 .picker-header .back {
   background: var(--card);
-  border-radius: 16px;
+  border-radius: 50%;
 }
 .wheel {
   height: 264px;

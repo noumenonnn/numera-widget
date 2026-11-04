@@ -13,7 +13,7 @@ export { FetchError } from "./rate-errors";
 import {
   activePairs,
   parseFx,
-  parseKraken,
+  parseKrakenMarket,
   parsePrices,
   positive,
   validDate,
@@ -27,7 +27,12 @@ type Policy = {
 type Data = {
   rates: Rates;
   policies: Record<string, Policy>;
-  exchange: { at: number; pairs: string[]; verified?: boolean };
+  exchange: {
+    at: number;
+    pairs: string[];
+    verified?: boolean;
+    catalogKey?: string;
+  };
 };
 export type RateStorage = {
   load: () => Promise<unknown>;
@@ -39,6 +44,27 @@ export function createRateService(deps: {
   now: () => number;
   jitter: () => number;
 }) {
+  const catalogKey = catalog
+    .map(
+      (currency) =>
+        currency.pair ||
+        currency.krakenPair ||
+        currency.fxCode ||
+        currency.code,
+    )
+    .join(",");
+  const krakenCurrencies = catalog.filter((currency) => currency.krakenPair);
+  const krakenUpdatedAt = (rates: Rates) => {
+    const times = [
+      rates.qAt,
+      ...krakenCurrencies.map(
+        (currency) => rates.cryptoFetchedAt?.[currency.code],
+      ),
+    ];
+    return times.every((at) => at !== undefined)
+      ? Math.min(...(times as number[]))
+      : undefined;
+  };
   let data: Data = {
     rates: structuredClone(emptyRates),
     policies: {},
@@ -181,12 +207,19 @@ export function createRateService(deps: {
         time(raw.exchange.at) &&
         raw.exchange.at <= deps.now() &&
         typeof raw.exchange.verified === "boolean" &&
+        raw.exchange.catalogKey === catalogKey &&
         raw.exchange.pairs.every(
           (pair) =>
             typeof pair === "string" && catalog.some((c) => c.pair === pair),
         )
       )
         data.exchange = raw.exchange;
+      // A catalog update must discover new crypto pairs and quotes immediately, while
+      // provider backoff still applies. Never mark new assets delisted using an old catalog.
+      if (!data.exchange.verified) {
+        data.rates.cryptoAt = undefined;
+        data.rates.unavailable = undefined;
+      }
       if (data.exchange.verified)
         data.rates.unavailable = catalog
           .filter((c) => c.pair && !data.exchange.pairs.includes(c.pair))
@@ -279,6 +312,7 @@ export function createRateService(deps: {
                       activePairs,
                     ),
                     verified: true,
+                    catalogKey,
                   };
                 const pairs = data.exchange.pairs;
                 next.unavailable = catalog
@@ -288,16 +322,8 @@ export function createRateService(deps: {
                   `https://data-api.binance.vision/api/v3/ticker/price?symbols=${encodeURIComponent(JSON.stringify(pairs))}`,
                   (text) => parsePrices(text, pairs),
                 );
-                const values = { ...old.crypto },
-                  times = {
-                    ...(old.cryptoFetchedAt ??
-                      Object.fromEntries(
-                        Object.keys(old.crypto).map((code) => [
-                          code,
-                          old.cryptoAt || 0,
-                        ]),
-                      )),
-                  };
+                const values: Record<string, string> = {},
+                  times: Record<string, number> = {};
                 let count = 0;
                 for (const c of catalog) {
                   const price = c.pair && prices[c.pair];
@@ -311,8 +337,11 @@ export function createRateService(deps: {
                 return { values, times };
               });
               if (quotes) {
-                next.crypto = quotes.values;
-                next.cryptoFetchedAt = quotes.times;
+                next.crypto = { ...next.crypto, ...quotes.values };
+                next.cryptoFetchedAt = {
+                  ...next.cryptoFetchedAt,
+                  ...quotes.times,
+                };
                 next.cryptoAt = deps.now();
               }
             }
@@ -320,16 +349,25 @@ export function createRateService(deps: {
         );
         tasks.push(
           (async () => {
-            if (!old.qAt || now - old.qAt >= 60000) {
-              const q = await attempt("Kraken", async () =>
+            const updatedAt = krakenUpdatedAt(old);
+            if (updatedAt === undefined || now - updatedAt >= 60000) {
+              const quotes = await attempt("Kraken", async () =>
                 read(
-                  "https://api.kraken.com/0/public/Ticker?pair=USDTUSD",
-                  parseKraken,
+                  `https://api.kraken.com/0/public/Ticker?pair=${["USDTUSD", ...krakenCurrencies.map((currency) => currency.krakenPair)].join(",")}`,
+                  parseKrakenMarket,
                 ),
               );
-              if (q) {
-                next.q = q;
-                next.qAt = deps.now();
+              if (quotes) {
+                const at = deps.now();
+                next.q = quotes.q;
+                next.qAt = at;
+                next.crypto = { ...next.crypto, ...quotes.prices };
+                next.cryptoFetchedAt = {
+                  ...next.cryptoFetchedAt,
+                  ...Object.fromEntries(
+                    Object.keys(quotes.prices).map((code) => [code, at]),
+                  ),
+                };
               }
             }
           })(),
@@ -389,7 +427,7 @@ export function createRateService(deps: {
       ...(kind === "crypto"
         ? [
             deadline("Binance", data.rates.cryptoAt, 60000),
-            deadline("Kraken", data.rates.qAt, 60000),
+            deadline("Kraken", krakenUpdatedAt(data.rates), 60000),
           ]
         : []),
     );

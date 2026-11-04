@@ -1,4 +1,4 @@
-import { validAmount, type Action, type State } from "./state";
+import { validAmount, type Action, type State, type Scope } from "./state";
 import type { Rates } from "./engine";
 import { byCode, type Kind } from "./catalog";
 import { positive, validDate } from "./providers";
@@ -10,9 +10,11 @@ const object = (x: unknown): x is Record<string, unknown> =>
 const text = (x: unknown): x is string =>
   typeof x === "string" && x.length > 0 && x.length <= 512;
 const kind = (x: unknown): x is Kind => x === "fiat" || x === "crypto";
-const code = (x: unknown, group: Kind) =>
-  typeof x === "string" && byCode(x)?.kind === group;
-const row = (x: unknown, group: Kind) =>
+const code = (x: unknown, group: Scope) =>
+  typeof x === "string" &&
+  !!byCode(x) &&
+  (group === "converter" || byCode(x).kind === group);
+const row = (x: unknown, group: Scope) =>
   object(x) && text(x.rowId) && code(x.code, group);
 export function isAction(x: unknown): x is Action {
   if (!object(x)) return false;
@@ -22,10 +24,10 @@ export function isAction(x: unknown): x is Action {
       typeof x.theme === "string" &&
       ["system", "light", "dark"].includes(x.theme)
     );
-  if (!kind(x.kind)) return false;
+  if (!kind(x.kind) && x.kind !== "converter") return false;
   switch (x.type) {
     case "tab":
-      return true;
+      return kind(x.kind);
     case "expand":
       return typeof x.expanded === "boolean";
     case "add":
@@ -107,18 +109,23 @@ export function isBackgroundMessage(x: unknown): x is BackgroundMessage {
     kind(s.tab) &&
     typeof s.theme === "string" &&
     ["dark", "light", "system"].includes(s.theme) &&
-    [s.fiat, s.crypto].every(
+    [s.fiat, s.crypto, s.converter].every(
       (tab, i) =>
         object(tab) &&
         Array.isArray(tab.rows) &&
         tab.rows.length >= 2 &&
-        tab.rows.every((entry) => row(entry, i === 0 ? "fiat" : "crypto")) &&
+        tab.rows.every((entry) =>
+          row(entry, i === 0 ? "fiat" : i === 1 ? "crypto" : "converter"),
+        ) &&
         new Set(tab.rows.map((entry) => entry.rowId)).size ===
           tab.rows.length &&
         new Set(tab.rows.map((entry) => entry.code)).size === tab.rows.length &&
         typeof tab.expanded === "boolean" &&
         object(tab.anchor) &&
-        code(tab.anchor.code, i === 0 ? "fiat" : "crypto") &&
+        code(
+          tab.anchor.code,
+          i === 0 ? "fiat" : i === 1 ? "crypto" : "converter",
+        ) &&
         validAmount(tab.anchor.amount),
     )
   );

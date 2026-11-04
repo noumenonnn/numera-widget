@@ -79,17 +79,24 @@ export function convert(
       return null;
     const x = amount instanceof Decimal ? amount : new Decimal(amount);
     if (from.code === to.code) return x;
+    const fromFx = from.fxCode || from.code;
+    const toFx = to.fxCode || to.code;
     if (from.kind === "fiat" && to.kind === "fiat") {
-      if (!r.fx[from.code] || !r.fx[to.code]) return null;
-      return x.mul(r.fx[to.code].rate).div(r.fx[from.code].rate);
+      if (fromFx === toFx) return x;
+      if (!r.fx[fromFx] || !r.fx[toFx]) return null;
+      return x.mul(r.fx[toFx].rate).div(r.fx[fromFx].rate);
     }
     if (from.kind === "crypto" && to.kind === "crypto") {
       if (!r.crypto[from.code] || !r.crypto[to.code]) return null;
       return x.mul(r.crypto[from.code]).div(r.crypto[to.code]);
     }
     if (from.kind === "crypto" && to.kind === "fiat") {
-      if (!r.crypto[from.code] || !r.q || !r.fx[to.code]) return null;
-      return x.mul(r.crypto[from.code]).mul(r.q).mul(r.fx[to.code].rate);
+      if (!r.crypto[from.code] || !r.q || !r.fx[toFx]) return null;
+      return x.mul(r.crypto[from.code]).mul(r.q).mul(r.fx[toFx].rate);
+    }
+    if (from.kind === "fiat" && to.kind === "crypto") {
+      if (!r.fx[fromFx] || !r.q || !r.crypto[to.code]) return null;
+      return x.div(r.fx[fromFx].rate).div(r.q).div(r.crypto[to.code]);
     }
     return null;
   } catch {
@@ -148,10 +155,16 @@ export function rateStatus(
 ): "ready" | "stale" | "unavailable" {
   if (!convert("1", from, to, r)) return "unavailable";
   if (from.code === to.code) return "ready";
+  if (
+    from.kind === "fiat" &&
+    to.kind === "fiat" &&
+    (from.fxCode || from.code) === (to.fxCode || to.code)
+  )
+    return "ready";
   let stale = false;
   const checkFiat = (c: Currency) => {
     if (c.code === "USD") return;
-    const q = r.fx[c.code];
+    const q = r.fx[c.fxCode || c.code];
     if (!q) {
       stale = true;
       return;
@@ -175,12 +188,7 @@ export function rateStatus(
   else checkCrypto(from);
   if (to.kind === "fiat") checkFiat(to);
   else checkCrypto(to);
-  if (
-    from.kind === "crypto" &&
-    to.kind === "fiat" &&
-    (!r.qAt || now - r.qAt > 120000)
-  )
-    stale = true;
+  if (from.kind !== to.kind && (!r.qAt || now - r.qAt > 120000)) stale = true;
   return stale ? "stale" : "ready";
 }
 export type Parsed =

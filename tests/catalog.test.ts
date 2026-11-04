@@ -10,7 +10,8 @@ describe("catalog completeness", () => {
         c.name.ru.charAt(0).toLocaleUpperCase("ru"),
       );
       expect(existsSync(`public/${c.icon}`), c.code).toBe(true);
-      if (c.kind === "crypto") expect(c.binanceAsset).toBeTruthy();
+      if (c.kind === "crypto")
+        expect(c.binanceAsset || c.krakenPair).toBeTruthy();
     }
   });
 });

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Settings,
+  RefreshCcw,
   Plus,
   ChevronsUpDown,
   ChevronsDownUp,
@@ -13,7 +14,7 @@ import {
 import { AnimatePresence, motion, MotionConfig } from "motion/react";
 import "@fontsource-variable/geist";
 import "./style.css";
-import { catalog, byCode, tables, type Kind, type Currency } from "./catalog";
+import { catalog, byCode, rateTable, type Currency } from "./catalog";
 import {
   convert,
   convertMany,
@@ -29,6 +30,7 @@ import {
   reconcileState,
   reduceState,
   type Action,
+  type Scope,
   type State,
   type Row,
 } from "./state";
@@ -88,17 +90,15 @@ function App() {
     } | null>(null);
   stateRef.current = state;
   ratesRef.current = rates;
-  const activeKind = state?.tab;
-  const activeAnchor = state ? state[state.tab].anchor : undefined;
+  const activeKind = state ? "converter" : undefined;
+  const activeAnchor = state ? state.converter.anchor : undefined;
   const locale = state?.locale;
   const anchorCode = activeAnchor?.code;
-  const activeRows = state?.[state.tab].rows;
+  const activeRows = state?.converter.rows;
   const allAdded = useMemo(() => {
     const present = new Set(activeRows?.map((row) => row.code));
-    return catalog
-      .filter((currency) => currency.kind === activeKind)
-      .every((currency) => present.has(currency.code));
-  }, [activeRows, activeKind]);
+    return catalog.every((currency) => present.has(currency.code));
+  }, [activeRows]);
   const calculationRates = useMemo(
     () => prepareCalculationRates(rates),
     [rates],
@@ -118,10 +118,10 @@ function App() {
     return convertMany(
       anchor.amount,
       byCode(anchor.code),
-      catalog.filter((c) => c.kind === activeKind),
+      catalog,
       calculationRates,
     );
-  }, [activeAnchor, activeKind, calculationRates]);
+  }, [activeAnchor, calculationRates]);
   const exactView = useRef({
     values,
     locale: locale || ("en" as State["locale"]),
@@ -133,7 +133,7 @@ function App() {
       {
         code: string;
         locale: State["locale"];
-        kind: Kind;
+        kind: Scope;
         value: string;
         loading: boolean;
         inactive: boolean;
@@ -209,7 +209,7 @@ function App() {
               connection.send({ type: "action", ...item });
           connection.send({
             type: "refresh",
-            kind: stateRef.current?.tab || "fiat",
+            kind: "crypto",
           });
         }
       },
@@ -236,10 +236,10 @@ function App() {
   useEffect(() => {
     if (!activeKind) return;
     setFetching(true);
-    port.current?.send({ type: "refresh", kind: activeKind });
+    port.current?.send({ type: "refresh", kind: "crypto" });
     const online = () => {
       port.current?.reconnect();
-      port.current?.send({ type: "refresh", kind: activeKind });
+      port.current?.send({ type: "refresh", kind: "crypto" });
     };
     window.addEventListener("online", online);
     return () => window.removeEventListener("online", online);
@@ -338,8 +338,11 @@ function App() {
     );
   }
   const t = tr[state.locale],
-    tab = state[state.tab];
-  const updatedAt = state.tab === "fiat" ? rates.fxAt : rates.cryptoAt;
+    tab = state.converter;
+  const updatedAt =
+    rates.fxAt && rates.cryptoAt
+      ? Math.min(rates.fxAt, rates.cryptoAt)
+      : undefined;
   const setViewPicker = (request: Picker) => {
     returnFocus.current =
       (document.activeElement as HTMLElement)?.dataset.focusId || null;
@@ -359,7 +362,7 @@ function App() {
       );
   };
   const updateRow = (
-    kind: Kind,
+    kind: Scope,
     rowId: string,
     code: string,
     amount?: string,
@@ -419,7 +422,7 @@ function App() {
         const rowId = p.target,
           previous = current.code;
         setNotice({
-          text: `${p.kind === "fiat" ? t.fiat : t.crypto} — ${c.code}`,
+          text: `${t.fiat} — ${c.code}`,
           undo: () =>
             dispatch({
               type: "undoReplace",
@@ -467,8 +470,8 @@ function App() {
       return;
     }
     const c = result.currency || byCode(row.code);
-    if (c.kind !== state.tab) return;
-    const current = stateRef.current?.[state.tab];
+
+    const current = stateRef.current?.converter;
     const target = current?.rows.find((r) => r.rowId === row.rowId);
     const other = current?.rows.find((r) => r.code === c.code);
     if (
@@ -476,10 +479,10 @@ function App() {
       current?.rows[0].rowId === row.rowId &&
       target.code !== c.code
     ) {
-      const kind = state.tab,
+      const kind = "converter",
         previous = target.code;
       setNotice({
-        text: `${kind === "fiat" ? t.fiat : t.crypto} — ${c.code}`,
+        text: `${t.fiat} — ${c.code}`,
         undo: () =>
           dispatch({
             type: "undoReplace",
@@ -491,7 +494,7 @@ function App() {
           }),
       });
     }
-    updateRow(state.tab, row.rowId, c.code, result.amount);
+    updateRow("converter", row.rowId, c.code, result.amount);
   };
   const remove = (row: Row) => {
     const i = tab.rows.findIndex((r) => r.rowId === row.rowId);
@@ -505,7 +508,7 @@ function App() {
       setNotice({ text: t.min });
       return;
     }
-    const kind = state.tab;
+    const kind = "converter";
     const keyboardFocus = document
       .getElementById(row.rowId)
       ?.closest(".card")
@@ -529,7 +532,7 @@ function App() {
     if (row)
       dispatch({
         type: "move",
-        kind: state.tab,
+        kind: "converter",
         rowId: row.rowId,
         targetIndex: i + delta,
       });
@@ -566,7 +569,7 @@ function App() {
   return (
     <MotionConfig reducedMotion="user">
       <RowInputsProvider value={inputs}>
-        <div className="app" data-theme={state.theme}>
+        <div className="app" data-theme={state.theme} data-view={view}>
           <motion.div
             key={view}
             className="surface"
@@ -577,48 +580,19 @@ function App() {
             {view === "main" ? (
               <>
                 <header>
-                  <div
-                    role="tablist"
-                    aria-label={
-                      state.locale === "ru" ? "Тип валют" : "Currency type"
+                  <h1 id="converter-heading">{t.converter}</h1>
+                  <button
+                    className="icon refresh"
+                    aria-label={t.refresh}
+                    title={t.refresh}
+                    disabled={fetching || connectionLost}
+                    aria-busy={fetching}
+                    onClick={() =>
+                      port.current?.send({ type: "refresh", kind: "crypto" })
                     }
-                    onKeyDown={(e) => {
-                      if (
-                        !["ArrowRight", "ArrowLeft", "Home", "End"].includes(
-                          e.key,
-                        )
-                      )
-                        return;
-                      e.preventDefault();
-                      const k: Kind =
-                        e.key === "Home"
-                          ? "fiat"
-                          : e.key === "End"
-                            ? "crypto"
-                            : state.tab === "fiat"
-                              ? "crypto"
-                              : "fiat";
-                      dispatch({ type: "tab", kind: k });
-                      e.currentTarget
-                        .querySelector<HTMLElement>(`#tab-${k}`)
-                        ?.focus();
-                    }}
                   >
-                    {(["fiat", "crypto"] as Kind[]).map((k) => (
-                      <button
-                        role="tab"
-                        id={`tab-${k}`}
-                        aria-controls="currency-panel"
-                        tabIndex={state.tab === k ? 0 : -1}
-                        aria-selected={state.tab === k}
-                        className={"tab " + (state.tab === k ? "active" : "")}
-                        key={k}
-                        onClick={() => dispatch({ type: "tab", kind: k })}
-                      >
-                        {t.tabs[k]}
-                      </button>
-                    ))}
-                  </div>
+                    <RefreshCcw size={18} />
+                  </button>
                   <button
                     className="icon settings"
                     data-focus-id="settings"
@@ -629,30 +603,21 @@ function App() {
                   </button>
                 </header>
                 <main
-                  role="tabpanel"
+                  aria-labelledby="converter-heading"
                   id="currency-panel"
-                  aria-labelledby={`tab-${state.tab}`}
                   className="scroll"
                   ref={scrollRef}
                 >
                   <div className={"rows " + (drag ? "drag-active" : "")}>
-                    <CurrencyRows key={state.tab}>
+                    <CurrencyRows key="converter">
                       {stableRowChildren(
                         tab.rows.map((row, i) => {
                           const c = byCode(row.code),
                             p = problems[row.rowId],
-                            cardProblem =
-                              p?.status === "valid" &&
-                              (!p.currency || p.currency.kind === state.tab)
-                                ? undefined
-                                : p,
+                            cardProblem = p?.status === "valid" ? undefined : p,
                             active = focus === row.rowId,
                             status = statuses.get(c.code)!,
-                            issue =
-                              !!p &&
-                              (p.status !== "valid" ||
-                                (!!p.currency &&
-                                  p.currency.kind !== state.tab)),
+                            issue = !!p && p.status !== "valid",
                             invalid =
                               p?.status === "invalid" ||
                               (!active && p?.status === "pending"),
@@ -697,7 +662,7 @@ function App() {
                             cached &&
                             cached.code === row.code &&
                             cached.locale === state.locale &&
-                            cached.kind === state.tab &&
+                            cached.kind === "converter" &&
                             cached.value === inputValue &&
                             cached.loading === loadingValue &&
                             cached.inactive ===
@@ -742,7 +707,7 @@ function App() {
                               inputCache.current.set(row.rowId, {
                                 code: row.code,
                                 locale: state.locale,
-                                kind: state.tab,
+                                kind: "converter",
                                 value: inputValue,
                                 loading: loadingValue,
                                 inactive: !!rates.unavailable?.includes(
@@ -756,7 +721,7 @@ function App() {
                             code: row.code,
                             index: i,
                             locale: state.locale,
-                            kind: state.tab,
+                            kind: "converter",
                             fetching,
                             status,
                             active,
@@ -788,7 +753,7 @@ function App() {
                                   i={i}
                                   rows={tab.rows}
                                   locale={state.locale}
-                                  kind={state.tab}
+                                  kind="converter"
                                   p={cardProblem}
                                   active={active}
                                   status={status}
@@ -844,7 +809,7 @@ function App() {
                       allAdded ? "catalog-exhausted" : undefined
                     }
                     onClick={() =>
-                      setViewPicker({ kind: state.tab, returnView: "main" })
+                      setViewPicker({ kind: "converter", returnView: "main" })
                     }
                   >
                     <Plus size={24} />
@@ -861,7 +826,7 @@ function App() {
                     onClick={() =>
                       dispatch({
                         type: "expand",
-                        kind: state.tab,
+                        kind: "converter",
                         expanded: !tab.expanded,
                       })
                     }
@@ -869,21 +834,6 @@ function App() {
                     <span>
                       1 {tab.rows[0].code} = {quote(rate(tab.rows[1].code))}{" "}
                       {tab.rows[1].code}
-                      {state.tab === "crypto" && (
-                        <>
-                          {" "}
-                          (≈{" "}
-                          {quote(
-                            convert(
-                              "1",
-                              byCode(tab.rows[0].code),
-                              byCode(state.fiat.rows[0].code),
-                              rates,
-                            ),
-                          )}{" "}
-                          {state.fiat.rows[0].code})
-                        </>
-                      )}
                     </span>
                     {tab.expanded ? (
                       <ChevronsDownUp size={18} />
@@ -907,7 +857,7 @@ function App() {
                           window.setTimeout(() => {
                             const current = stateRef.current;
                             const scroller = scrollRef.current;
-                            if (current?.[current.tab].expanded && scroller)
+                            if (current?.converter.expanded && scroller)
                               scroller.scrollTo({
                                 top: scroller.scrollHeight,
                                 behavior: matchMedia(
@@ -920,14 +870,14 @@ function App() {
                         }}
                         style={{ overflow: "hidden" }}
                       >
-                        {tables[state.tab].map((code) => {
+                        {rateTable.map((code) => {
                           const status = rateStatus(
                             byCode(tab.rows[0].code),
                             byCode(code),
                             rates,
                           );
                           const date =
-                            state.tab === "fiat"
+                            byCode(code).kind === "fiat"
                               ? rates.fx[code]?.date
                               : undefined;
                           return (
@@ -945,7 +895,10 @@ function App() {
                                 .join(" · ")}
                             >
                               <img src={byCode(code).icon} alt="" />
-                              <span>{code}</span>
+                              <span className="rate-currency-name">
+                                {byCode(code).name[state.locale]}{" "}
+                                <small>{code}</small>
+                              </span>
                               {status === "stale" && (
                                 <span
                                   className="table-status"
@@ -978,7 +931,7 @@ function App() {
                   </AnimatePresence>
                   <RateNotice
                     rates={rates}
-                    kind={state.tab}
+                    kind="crypto"
                     locale={state.locale}
                     nextWakeAt={nextWakeAt}
                     onDenied={() => setNotice({ text: t.permissionDenied })}
@@ -986,28 +939,10 @@ function App() {
                       port.current?.reconnect();
                       port.current?.send({
                         type: "refresh",
-                        kind: state.tab,
+                        kind: "crypto",
                       });
                     }}
                   />
-                  {state.tab === "crypto" &&
-                    rateStatus(
-                      byCode(tab.rows[0].code),
-                      byCode(state.fiat.rows[0].code),
-                      rates,
-                    ) !== "ready" && (
-                      <p className="network">
-                        {rateStatus(
-                          byCode(tab.rows[0].code),
-                          byCode(state.fiat.rows[0].code),
-                          rates,
-                        ) === "stale"
-                          ? t.stale
-                          : fetching
-                            ? t.loading
-                            : t.unavailable}
-                      </p>
-                    )}
                 </main>
               </>
             ) : null}
@@ -1090,26 +1025,27 @@ function App() {
                       ))}
                     </div>
                   </div>
-                  {(["fiat", "crypto"] as Kind[]).map((k) => (
-                    <div key={k}>
-                      <span>{t[k]}</span>
-                      <button
-                        className="currency"
-                        data-focus-id={"default-" + k}
-                        onClick={() =>
-                          setViewPicker({
-                            kind: k,
-                            target: state[k].rows[0].rowId,
-                            returnView: "settings",
-                          })
-                        }
-                      >
-                        <img src={byCode(state[k].rows[0].code).icon} alt="" />
-                        {state[k].rows[0].code}
-                        <ChevronsUpDown size={18} />
-                      </button>
-                    </div>
-                  ))}
+                  <div>
+                    <span>{t.fiat}</span>
+                    <button
+                      className="currency"
+                      data-focus-id="default-converter"
+                      onClick={() =>
+                        setViewPicker({
+                          kind: "converter",
+                          target: state.converter.rows[0].rowId,
+                          returnView: "settings",
+                        })
+                      }
+                    >
+                      <img
+                        src={byCode(state.converter.rows[0].code).icon}
+                        alt=""
+                      />
+                      {state.converter.rows[0].code}
+                      <ChevronsUpDown size={18} />
+                    </button>
+                  </div>
                 </main>
                 <div className="brand">
                   <img src="icons/numera-128.png" alt="" /> Numera{" "}
