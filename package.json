@@ -1,0 +1,68 @@
+{
+  "name": "numera-widget",
+  "private": true,
+  "version": "1.0.8",
+  "description": "A privacy-conscious currency and cryptocurrency converter for Firefox Desktop.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/noumenonnn/numera-widget.git"
+  },
+  "homepage": "https://github.com/noumenonnn/numera-widget#readme",
+  "bugs": {
+    "url": "https://github.com/noumenonnn/numera-widget/issues"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "node scripts/export-catalog.mjs && tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "eslint src tests",
+    "package": "npm run build && web-ext build --source-dir dist --artifacts-dir artifacts --overwrite-dest",
+    "package:source": "node scripts/package-source.mjs",
+    "lint:extension": "node scripts/lint-extension.mjs",
+    "verify": "node scripts/check-release.mjs && npm run lint && npm run typecheck && npm test && npm run build && npm run lint:extension",
+    "test:e2e": "npm run package && node scripts/test-e2e.mjs",
+    "test:recovery": "npm run build && node scripts/test-recovery.mjs",
+    "assets:optimize": "node scripts/optimize-assets.mjs",
+    "audit:dependencies": "npm audit --audit-level=low"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist": "^5.2.8",
+    "@web3icons/core": "^4.0.58",
+    "decimal.js": "^10.6.0",
+    "flag-icons": "^7.5.0",
+    "lossless-json": "^4.3.0",
+    "lucide-react": "^0.468.0",
+    "motion": "^12.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/firefox-webext-browser": "^120.0.4",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "deepmerge": "file:vendor/numera-deepmerge-4.3.1-numera.1.tgz",
+    "eslint": "^10.14.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "geckodriver": "^8.0.0",
+    "jszip": "3.10.1",
+    "minimatch": "file:vendor/numera-minimatch-compat-1.0.2.tgz",
+    "prettier": "^3.9.10",
+    "selenium-webdriver": "^4.51.0",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.64.0",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5",
+    "web-ext": "^10.8.0"
+  },
+  "engines": {
+    "node": ">=24.15.0 <25",
+    "npm": ">=11 <12"
+  },
+  "packageManager": "npm@11.6.1",
+  "overrides": {
+    "deepmerge": "$deepmerge",
+    "minimatch": "$minimatch"
+  }
+}

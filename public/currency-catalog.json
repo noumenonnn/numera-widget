@@ -1,0 +1,1225 @@
+{
+  "version": 1,
+  "currencies": [
+    {
+      "id": "fiat:RUB",
+      "kind": "fiat",
+      "code": "RUB",
+      "name": {
+        "en": "Russian Ruble",
+        "ru": "Российский рубль"
+      },
+      "aliases": [
+        "рубль",
+        "рубля",
+        "рублей",
+        "руб",
+        "руб.",
+        "ruble",
+        "rouble"
+      ],
+      "symbols": [
+        "₽"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/ru.svg"
+    },
+    {
+      "id": "fiat:USD",
+      "kind": "fiat",
+      "code": "USD",
+      "name": {
+        "en": "US Dollar",
+        "ru": "Доллар США"
+      },
+      "aliases": [
+        "доллар",
+        "доллара",
+        "долларов",
+        "доллар сша",
+        "dollar"
+      ],
+      "symbols": [
+        "$"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/us.svg"
+    },
+    {
+      "id": "fiat:EUR",
+      "kind": "fiat",
+      "code": "EUR",
+      "name": {
+        "en": "Euro",
+        "ru": "Евро"
+      },
+      "aliases": [
+        "евро",
+        "euro"
+      ],
+      "symbols": [
+        "€"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/eu.svg"
+    },
+    {
+      "id": "fiat:CNY",
+      "kind": "fiat",
+      "code": "CNY",
+      "name": {
+        "en": "Chinese Yuan",
+        "ru": "Китайский юань"
+      },
+      "aliases": [
+        "юань",
+        "юаня",
+        "юаней",
+        "yuan"
+      ],
+      "symbols": [
+        "¥"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/cn.svg"
+    },
+    {
+      "id": "fiat:GBP",
+      "kind": "fiat",
+      "code": "GBP",
+      "name": {
+        "en": "British Pound",
+        "ru": "Фунт стерлингов"
+      },
+      "aliases": [
+        "фунт",
+        "фунта",
+        "фунтов",
+        "pound"
+      ],
+      "symbols": [
+        "£"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/gb.svg"
+    },
+    {
+      "id": "fiat:AED",
+      "kind": "fiat",
+      "code": "AED",
+      "name": {
+        "en": "UAE Dirham",
+        "ru": "Дирхам ОАЭ"
+      },
+      "aliases": [
+        "дирхам",
+        "дирхама",
+        "дирхамов",
+        "dirham"
+      ],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/ae.svg"
+    },
+    {
+      "id": "fiat:TRY",
+      "kind": "fiat",
+      "code": "TRY",
+      "name": {
+        "en": "Turkish Lira",
+        "ru": "Турецкая лира"
+      },
+      "aliases": [
+        "лира",
+        "лиры",
+        "лир",
+        "lira"
+      ],
+      "symbols": [
+        "₺"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/tr.svg"
+    },
+    {
+      "id": "fiat:KZT",
+      "kind": "fiat",
+      "code": "KZT",
+      "name": {
+        "en": "Kazakhstani Tenge",
+        "ru": "Казахстанский тенге"
+      },
+      "aliases": [
+        "тенге",
+        "tenge"
+      ],
+      "symbols": [
+        "₸"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/kz.svg"
+    },
+    {
+      "id": "fiat:CAD",
+      "kind": "fiat",
+      "code": "CAD",
+      "name": {
+        "en": "Canadian Dollar",
+        "ru": "Канадский доллар"
+      },
+      "aliases": [],
+      "symbols": [
+        "$"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/ca.svg"
+    },
+    {
+      "id": "fiat:AUD",
+      "kind": "fiat",
+      "code": "AUD",
+      "name": {
+        "en": "Australian Dollar",
+        "ru": "Австралийский доллар"
+      },
+      "aliases": [],
+      "symbols": [
+        "$"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/au.svg"
+    },
+    {
+      "id": "fiat:JPY",
+      "kind": "fiat",
+      "code": "JPY",
+      "name": {
+        "en": "Japanese Yen",
+        "ru": "Японская иена"
+      },
+      "aliases": [
+        "иена",
+        "иены",
+        "yen"
+      ],
+      "symbols": [
+        "¥"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/jp.svg"
+    },
+    {
+      "id": "fiat:CHF",
+      "kind": "fiat",
+      "code": "CHF",
+      "name": {
+        "en": "Swiss Franc",
+        "ru": "Швейцарский франк"
+      },
+      "aliases": [
+        "франк",
+        "franc"
+      ],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/ch.svg"
+    },
+    {
+      "id": "fiat:INR",
+      "kind": "fiat",
+      "code": "INR",
+      "name": {
+        "en": "Indian Rupee",
+        "ru": "Индийская рупия"
+      },
+      "aliases": [],
+      "symbols": [
+        "₹"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/in.svg"
+    },
+    {
+      "id": "fiat:BRL",
+      "kind": "fiat",
+      "code": "BRL",
+      "name": {
+        "en": "Brazilian Real",
+        "ru": "Бразильский реал"
+      },
+      "aliases": [],
+      "symbols": [
+        "R$"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/br.svg"
+    },
+    {
+      "id": "fiat:UAH",
+      "kind": "fiat",
+      "code": "UAH",
+      "name": {
+        "en": "Ukrainian Hryvnia",
+        "ru": "Украинская гривна"
+      },
+      "aliases": [],
+      "symbols": [
+        "₴"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/ua.svg"
+    },
+    {
+      "id": "fiat:BYN",
+      "kind": "fiat",
+      "code": "BYN",
+      "name": {
+        "en": "Belarusian Ruble",
+        "ru": "Белорусский рубль"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/by.svg"
+    },
+    {
+      "id": "fiat:GEL",
+      "kind": "fiat",
+      "code": "GEL",
+      "name": {
+        "en": "Georgian Lari",
+        "ru": "Грузинский лари"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/ge.svg"
+    },
+    {
+      "id": "fiat:PLN",
+      "kind": "fiat",
+      "code": "PLN",
+      "name": {
+        "en": "Polish Zloty",
+        "ru": "Польский злотый"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/pl.svg"
+    },
+    {
+      "id": "fiat:ARS",
+      "kind": "fiat",
+      "code": "ARS",
+      "name": {
+        "en": "Argentine Peso",
+        "ru": "Аргентинский песо"
+      },
+      "aliases": [],
+      "symbols": [
+        "$"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/ar.svg"
+    },
+    {
+      "id": "fiat:CLP",
+      "kind": "fiat",
+      "code": "CLP",
+      "name": {
+        "en": "Chilean Peso",
+        "ru": "Чилийский песо"
+      },
+      "aliases": [],
+      "symbols": [
+        "$"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/cl.svg"
+    },
+    {
+      "id": "fiat:MXN",
+      "kind": "fiat",
+      "code": "MXN",
+      "name": {
+        "en": "Mexican Peso",
+        "ru": "Мексиканский песо"
+      },
+      "aliases": [],
+      "symbols": [
+        "$"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/mx.svg"
+    },
+    {
+      "id": "fiat:COP",
+      "kind": "fiat",
+      "code": "COP",
+      "name": {
+        "en": "Colombian Peso",
+        "ru": "Колумбийский песо"
+      },
+      "aliases": [],
+      "symbols": [
+        "$"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/co.svg"
+    },
+    {
+      "id": "fiat:PEN",
+      "kind": "fiat",
+      "code": "PEN",
+      "name": {
+        "en": "Peruvian Sol",
+        "ru": "Перуанский соль"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/pe.svg"
+    },
+    {
+      "id": "fiat:UYU",
+      "kind": "fiat",
+      "code": "UYU",
+      "name": {
+        "en": "Uruguayan Peso",
+        "ru": "Уругвайский песо"
+      },
+      "aliases": [],
+      "symbols": [
+        "$"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/uy.svg"
+    },
+    {
+      "id": "fiat:CZK",
+      "kind": "fiat",
+      "code": "CZK",
+      "name": {
+        "en": "Czech Koruna",
+        "ru": "Чешская крона"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/cz.svg"
+    },
+    {
+      "id": "fiat:DKK",
+      "kind": "fiat",
+      "code": "DKK",
+      "name": {
+        "en": "Danish Krone",
+        "ru": "Датская крона"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/dk.svg"
+    },
+    {
+      "id": "fiat:SEK",
+      "kind": "fiat",
+      "code": "SEK",
+      "name": {
+        "en": "Swedish Krona",
+        "ru": "Шведская крона"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/se.svg"
+    },
+    {
+      "id": "fiat:NOK",
+      "kind": "fiat",
+      "code": "NOK",
+      "name": {
+        "en": "Norwegian Krone",
+        "ru": "Норвежская крона"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/no.svg"
+    },
+    {
+      "id": "fiat:HUF",
+      "kind": "fiat",
+      "code": "HUF",
+      "name": {
+        "en": "Hungarian Forint",
+        "ru": "Венгерский форинт"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/hu.svg"
+    },
+    {
+      "id": "fiat:ISK",
+      "kind": "fiat",
+      "code": "ISK",
+      "name": {
+        "en": "Icelandic Króna",
+        "ru": "Исландская крона"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/is.svg"
+    },
+    {
+      "id": "fiat:RON",
+      "kind": "fiat",
+      "code": "RON",
+      "name": {
+        "en": "Romanian Leu",
+        "ru": "Румынский лей"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/ro.svg"
+    },
+    {
+      "id": "fiat:RSD",
+      "kind": "fiat",
+      "code": "RSD",
+      "name": {
+        "en": "Serbian Dinar",
+        "ru": "Сербский динар"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/rs.svg"
+    },
+    {
+      "id": "fiat:AMD",
+      "kind": "fiat",
+      "code": "AMD",
+      "name": {
+        "en": "Armenian Dram",
+        "ru": "Армянский драм"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/am.svg"
+    },
+    {
+      "id": "fiat:AZN",
+      "kind": "fiat",
+      "code": "AZN",
+      "name": {
+        "en": "Azerbaijani Manat",
+        "ru": "Азербайджанский манат"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/az.svg"
+    },
+    {
+      "id": "fiat:UZS",
+      "kind": "fiat",
+      "code": "UZS",
+      "name": {
+        "en": "Uzbekistani Som",
+        "ru": "Узбекский сум"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/uz.svg"
+    },
+    {
+      "id": "fiat:KGS",
+      "kind": "fiat",
+      "code": "KGS",
+      "name": {
+        "en": "Kyrgyz Som",
+        "ru": "Киргизский сом"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/kg.svg"
+    },
+    {
+      "id": "fiat:TJS",
+      "kind": "fiat",
+      "code": "TJS",
+      "name": {
+        "en": "Tajikistani Somoni",
+        "ru": "Таджикский сомони"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/tj.svg"
+    },
+    {
+      "id": "fiat:TMT",
+      "kind": "fiat",
+      "code": "TMT",
+      "name": {
+        "en": "Turkmenistani Manat",
+        "ru": "Новый туркменский манат"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/tm.svg"
+    },
+    {
+      "id": "fiat:MDL",
+      "kind": "fiat",
+      "code": "MDL",
+      "name": {
+        "en": "Moldovan Leu",
+        "ru": "Молдавский лей"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/md.svg"
+    },
+    {
+      "id": "fiat:PKR",
+      "kind": "fiat",
+      "code": "PKR",
+      "name": {
+        "en": "Pakistani Rupee",
+        "ru": "Пакистанская рупия"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/pk.svg"
+    },
+    {
+      "id": "fiat:BDT",
+      "kind": "fiat",
+      "code": "BDT",
+      "name": {
+        "en": "Bangladeshi Taka",
+        "ru": "Бангладешская така"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/bd.svg"
+    },
+    {
+      "id": "fiat:LKR",
+      "kind": "fiat",
+      "code": "LKR",
+      "name": {
+        "en": "Sri Lankan Rupee",
+        "ru": "Шри-ланкийская рупия"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/lk.svg"
+    },
+    {
+      "id": "fiat:NPR",
+      "kind": "fiat",
+      "code": "NPR",
+      "name": {
+        "en": "Nepalese Rupee",
+        "ru": "Непальская рупия"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/np.svg"
+    },
+    {
+      "id": "fiat:THB",
+      "kind": "fiat",
+      "code": "THB",
+      "name": {
+        "en": "Thai Baht",
+        "ru": "Таиландский бат"
+      },
+      "aliases": [],
+      "symbols": [
+        "฿"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/th.svg"
+    },
+    {
+      "id": "fiat:VND",
+      "kind": "fiat",
+      "code": "VND",
+      "name": {
+        "en": "Vietnamese Dong",
+        "ru": "Вьетнамский донг"
+      },
+      "aliases": [],
+      "symbols": [
+        "₫"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/vn.svg"
+    },
+    {
+      "id": "fiat:IDR",
+      "kind": "fiat",
+      "code": "IDR",
+      "name": {
+        "en": "Indonesian Rupiah",
+        "ru": "Индонезийская рупия"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/id.svg"
+    },
+    {
+      "id": "fiat:MYR",
+      "kind": "fiat",
+      "code": "MYR",
+      "name": {
+        "en": "Malaysian Ringgit",
+        "ru": "Малайзийский ринггит"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/my.svg"
+    },
+    {
+      "id": "fiat:SGD",
+      "kind": "fiat",
+      "code": "SGD",
+      "name": {
+        "en": "Singapore Dollar",
+        "ru": "Сингапурский доллар"
+      },
+      "aliases": [],
+      "symbols": [
+        "$"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/sg.svg"
+    },
+    {
+      "id": "fiat:HKD",
+      "kind": "fiat",
+      "code": "HKD",
+      "name": {
+        "en": "Hong Kong Dollar",
+        "ru": "Гонконгский доллар"
+      },
+      "aliases": [],
+      "symbols": [
+        "$"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/hk.svg"
+    },
+    {
+      "id": "fiat:TWD",
+      "kind": "fiat",
+      "code": "TWD",
+      "name": {
+        "en": "New Taiwan Dollar",
+        "ru": "Новый тайваньский доллар"
+      },
+      "aliases": [],
+      "symbols": [
+        "$"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/tw.svg"
+    },
+    {
+      "id": "fiat:KRW",
+      "kind": "fiat",
+      "code": "KRW",
+      "name": {
+        "en": "South Korean Won",
+        "ru": "Южнокорейская вона"
+      },
+      "aliases": [],
+      "symbols": [
+        "₩"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/kr.svg"
+    },
+    {
+      "id": "fiat:PHP",
+      "kind": "fiat",
+      "code": "PHP",
+      "name": {
+        "en": "Philippine Peso",
+        "ru": "Филиппинский песо"
+      },
+      "aliases": [],
+      "symbols": [
+        "₱"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/ph.svg"
+    },
+    {
+      "id": "fiat:SAR",
+      "kind": "fiat",
+      "code": "SAR",
+      "name": {
+        "en": "Saudi Riyal",
+        "ru": "Саудовский риял"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/sa.svg"
+    },
+    {
+      "id": "fiat:QAR",
+      "kind": "fiat",
+      "code": "QAR",
+      "name": {
+        "en": "Qatari Riyal",
+        "ru": "Катарский риал"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/qa.svg"
+    },
+    {
+      "id": "fiat:KWD",
+      "kind": "fiat",
+      "code": "KWD",
+      "name": {
+        "en": "Kuwaiti Dinar",
+        "ru": "Кувейтский динар"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/kw.svg"
+    },
+    {
+      "id": "fiat:BHD",
+      "kind": "fiat",
+      "code": "BHD",
+      "name": {
+        "en": "Bahraini Dinar",
+        "ru": "Бахрейнский динар"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/bh.svg"
+    },
+    {
+      "id": "fiat:OMR",
+      "kind": "fiat",
+      "code": "OMR",
+      "name": {
+        "en": "Omani Rial",
+        "ru": "Оманский риал"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/om.svg"
+    },
+    {
+      "id": "fiat:ILS",
+      "kind": "fiat",
+      "code": "ILS",
+      "name": {
+        "en": "Israeli New Shekel",
+        "ru": "Новый израильский шекель"
+      },
+      "aliases": [],
+      "symbols": [
+        "₪"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/il.svg"
+    },
+    {
+      "id": "fiat:JOD",
+      "kind": "fiat",
+      "code": "JOD",
+      "name": {
+        "en": "Jordanian Dinar",
+        "ru": "Иорданский динар"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/jo.svg"
+    },
+    {
+      "id": "fiat:EGP",
+      "kind": "fiat",
+      "code": "EGP",
+      "name": {
+        "en": "Egyptian Pound",
+        "ru": "Египетский фунт"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/eg.svg"
+    },
+    {
+      "id": "fiat:MAD",
+      "kind": "fiat",
+      "code": "MAD",
+      "name": {
+        "en": "Moroccan Dirham",
+        "ru": "Марокканский дирхам"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/ma.svg"
+    },
+    {
+      "id": "fiat:ZAR",
+      "kind": "fiat",
+      "code": "ZAR",
+      "name": {
+        "en": "South African Rand",
+        "ru": "Южноафриканский рэнд"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/za.svg"
+    },
+    {
+      "id": "fiat:NGN",
+      "kind": "fiat",
+      "code": "NGN",
+      "name": {
+        "en": "Nigerian Naira",
+        "ru": "Нигерийская найра"
+      },
+      "aliases": [],
+      "symbols": [
+        "₦"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/ng.svg"
+    },
+    {
+      "id": "fiat:KES",
+      "kind": "fiat",
+      "code": "KES",
+      "name": {
+        "en": "Kenyan Shilling",
+        "ru": "Кенийский шиллинг"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/ke.svg"
+    },
+    {
+      "id": "fiat:GHS",
+      "kind": "fiat",
+      "code": "GHS",
+      "name": {
+        "en": "Ghanaian Cedi",
+        "ru": "Ганский седи"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/gh.svg"
+    },
+    {
+      "id": "fiat:ETB",
+      "kind": "fiat",
+      "code": "ETB",
+      "name": {
+        "en": "Ethiopian Birr",
+        "ru": "Эфиопский быр"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/et.svg"
+    },
+    {
+      "id": "fiat:TZS",
+      "kind": "fiat",
+      "code": "TZS",
+      "name": {
+        "en": "Tanzanian Shilling",
+        "ru": "Танзанийский шиллинг"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/tz.svg"
+    },
+    {
+      "id": "fiat:UGX",
+      "kind": "fiat",
+      "code": "UGX",
+      "name": {
+        "en": "Ugandan Shilling",
+        "ru": "Угандийский шиллинг"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/ug.svg"
+    },
+    {
+      "id": "fiat:NZD",
+      "kind": "fiat",
+      "code": "NZD",
+      "name": {
+        "en": "New Zealand Dollar",
+        "ru": "Новозеландский доллар"
+      },
+      "aliases": [],
+      "symbols": [
+        "$"
+      ],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/nz.svg"
+    },
+    {
+      "id": "fiat:DZD",
+      "kind": "fiat",
+      "code": "DZD",
+      "name": {
+        "en": "Algerian Dinar",
+        "ru": "Алжирский динар"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/dz.svg"
+    },
+    {
+      "id": "fiat:TND",
+      "kind": "fiat",
+      "code": "TND",
+      "name": {
+        "en": "Tunisian Dinar",
+        "ru": "Тунисский динар"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/tn.svg"
+    },
+    {
+      "id": "fiat:BAM",
+      "kind": "fiat",
+      "code": "BAM",
+      "name": {
+        "en": "Bosnia-Herzegovina Convertible Mark",
+        "ru": "Конвертируемая марка Боснии и Герцеговины"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/ba.svg"
+    },
+    {
+      "id": "fiat:ALL",
+      "kind": "fiat",
+      "code": "ALL",
+      "name": {
+        "en": "Albanian Lek",
+        "ru": "Албанский лек"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/al.svg"
+    },
+    {
+      "id": "fiat:MNT",
+      "kind": "fiat",
+      "code": "MNT",
+      "name": {
+        "en": "Mongolian Tugrik",
+        "ru": "Монгольский тугрик"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/mn.svg"
+    },
+    {
+      "id": "fiat:KHR",
+      "kind": "fiat",
+      "code": "KHR",
+      "name": {
+        "en": "Cambodian Riel",
+        "ru": "Камбоджийский риель"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/kh.svg"
+    },
+    {
+      "id": "fiat:LAK",
+      "kind": "fiat",
+      "code": "LAK",
+      "name": {
+        "en": "Laotian Kip",
+        "ru": "Лаосский кип"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Frankfurter v2; manually curated names and flag-icons",
+      "iconPath": "assets/la.svg"
+    },
+    {
+      "id": "crypto:BTC",
+      "kind": "crypto",
+      "code": "BTC",
+      "name": {
+        "en": "Bitcoin",
+        "ru": "Биткоин"
+      },
+      "aliases": [
+        "биткоина",
+        "биткоинов",
+        "bitcoin"
+      ],
+      "symbols": [],
+      "metadataSource": "Manually curated asset identity; Web3 Icons; Binance",
+      "binanceAsset": "BTC",
+      "iconPath": "assets/BTC.svg",
+      "binanceUsdtPair": "BTCUSDT"
+    },
+    {
+      "id": "crypto:ETH",
+      "kind": "crypto",
+      "code": "ETH",
+      "name": {
+        "en": "Ethereum",
+        "ru": "Эфириум"
+      },
+      "aliases": [
+        "эфир",
+        "эфира",
+        "ethereum"
+      ],
+      "symbols": [],
+      "metadataSource": "Manually curated asset identity; Web3 Icons; Binance",
+      "binanceAsset": "ETH",
+      "iconPath": "assets/ETH.svg",
+      "binanceUsdtPair": "ETHUSDT"
+    },
+    {
+      "id": "crypto:USDT",
+      "kind": "crypto",
+      "code": "USDT",
+      "name": {
+        "en": "Tether USD",
+        "ru": "Tether USD"
+      },
+      "aliases": [
+        "tether"
+      ],
+      "symbols": [],
+      "metadataSource": "Manually curated asset identity; Web3 Icons; Binance",
+      "binanceAsset": "USDT",
+      "iconPath": "assets/USDT.svg"
+    },
+    {
+      "id": "crypto:USDC",
+      "kind": "crypto",
+      "code": "USDC",
+      "name": {
+        "en": "USD Coin",
+        "ru": "USD Coin"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Manually curated asset identity; Web3 Icons; Binance",
+      "binanceAsset": "USDC",
+      "iconPath": "assets/USDC.svg",
+      "binanceUsdtPair": "USDCUSDT"
+    },
+    {
+      "id": "crypto:BNB",
+      "kind": "crypto",
+      "code": "BNB",
+      "name": {
+        "en": "BNB",
+        "ru": "BNB"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Manually curated asset identity; Web3 Icons; Binance",
+      "binanceAsset": "BNB",
+      "iconPath": "assets/BNB.svg",
+      "binanceUsdtPair": "BNBUSDT"
+    },
+    {
+      "id": "crypto:SOL",
+      "kind": "crypto",
+      "code": "SOL",
+      "name": {
+        "en": "Solana",
+        "ru": "Solana"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Manually curated asset identity; Web3 Icons; Binance",
+      "binanceAsset": "SOL",
+      "iconPath": "assets/SOL.svg",
+      "binanceUsdtPair": "SOLUSDT"
+    },
+    {
+      "id": "crypto:XRP",
+      "kind": "crypto",
+      "code": "XRP",
+      "name": {
+        "en": "XRP",
+        "ru": "XRP"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Manually curated asset identity; Web3 Icons; Binance",
+      "binanceAsset": "XRP",
+      "iconPath": "assets/XRP.svg",
+      "binanceUsdtPair": "XRPUSDT"
+    },
+    {
+      "id": "crypto:TRX",
+      "kind": "crypto",
+      "code": "TRX",
+      "name": {
+        "en": "Tron",
+        "ru": "Tron"
+      },
+      "aliases": [],
+      "symbols": [],
+      "metadataSource": "Manually curated asset identity; Web3 Icons; Binance",
+      "binanceAsset": "TRX",
+      "iconPath": "assets/TRX.svg",
+      "binanceUsdtPair": "TRXUSDT"
+    }
+  ]
+}

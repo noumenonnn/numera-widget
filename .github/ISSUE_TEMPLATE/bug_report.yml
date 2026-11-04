@@ -1,0 +1,17 @@
+name: Bug report
+description: Report a reproducible problem in Numera.
+body:
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Numera version, Firefox version, operating system.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps, expected behavior, and actual behavior
+      description: Use sample amounts and remove personal data from any attachments.
+    validations:
+      required: true

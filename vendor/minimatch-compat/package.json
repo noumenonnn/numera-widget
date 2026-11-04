@@ -1,0 +1,11 @@
+{
+  "name": "@numera/minimatch-compat",
+  "version": "1.0.2",
+  "private": true,
+  "description": "Legacy callable CommonJS entry for the patched minimatch engine used by development tools",
+  "main": "index.cjs",
+  "license": "MIT",
+  "dependencies": {
+    "minimatch-modern": "npm:minimatch@11.0.4"
+  }
+}

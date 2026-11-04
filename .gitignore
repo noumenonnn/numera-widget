@@ -1,0 +1,40 @@
+# Dependencies and generated builds
+node_modules/
+dist/
+artifacts/
+artifacts-*/
+
+# Local test output, browser profiles, recordings, and backups
+reports/
+.test-tools/
+.playwright-mcp/
+playwright-report/
+test-results/
+coverage/
+recording-frames/
+.local-history/
+*.log
+*.tsbuildinfo
+
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crx
+*.xpi
+.npmrc
+.codex/
+.agents/
+.aws/
+
+# Editor and operating system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*~
