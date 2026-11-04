@@ -6,6 +6,10 @@ import { expect, it } from "vitest";
 const require = createRequire(import.meta.url);
 const fromWebExt = createRequire(require.resolve("web-ext"));
 const fromLinter = createRequire(fromWebExt.resolve("addons-linter"));
+// Git normalizes checked-in text to LF; npm tarballs retain their original EOLs.
+// Compare every source character except that platform-only representation.
+const readSource = (path: string | URL) =>
+  readFileSync(path, "utf8").replace(/\r\n/g, "\n");
 const merge = fromLinter("deepmerge") as (
   target: unknown,
   source: unknown,
@@ -13,16 +17,14 @@ const merge = fromLinter("deepmerge") as (
 ) => Record<string, unknown>;
 
 it("runs the checked-in security packages rather than an unpatched nested copy", () => {
-  expect(readFileSync(fromLinter.resolve("deepmerge"), "utf8")).toBe(
-    readFileSync(
+  expect(readSource(fromLinter.resolve("deepmerge"))).toBe(
+    readSource(
       new URL("../vendor/deepmerge/index.cjs", import.meta.url),
-      "utf8",
     ),
   );
-  expect(readFileSync(require.resolve("minimatch"), "utf8")).toBe(
-    readFileSync(
+  expect(readSource(require.resolve("minimatch"))).toBe(
+    readSource(
       new URL("../vendor/minimatch-compat/index.cjs", import.meta.url),
-      "utf8",
     ),
   );
 });
