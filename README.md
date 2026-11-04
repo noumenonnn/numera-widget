@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="public/icons/numera-128.png" width="96" height="96" alt="Numera logo">
+  <img src="docs/images/numera.png" width="96" height="96" alt="Numera logo">
   <h1>Numera</h1>
   <p>Currency and cryptocurrency conversion in your Firefox toolbar.</p>
   <p><a href="https://github.com/noumenonnn/numera-widget/actions/workflows/ci.yml"><img src="https://github.com/noumenonnn/numera-widget/actions/workflows/ci.yml/badge.svg" alt="CI"></a> <img src="https://img.shields.io/badge/version-1.0.8-blue" alt="Version 1.0.8"> <img src="https://img.shields.io/badge/Firefox-140%2B-orange" alt="Firefox Desktop 140 or later"></p>
