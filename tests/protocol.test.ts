@@ -1,6 +1,35 @@
 import { expect, it } from "vitest";
-import { isAction, isBackgroundMessage } from "../src/protocol";
+import { isAction, isBackgroundMessage, isPopupMessage } from "../src/protocol";
 import { initial } from "../src/state";
+it("validates the last-check timestamp in rate snapshots", () => {
+  const rates = { fx: {}, crypto: {}, lastCheckedAt: 1000 };
+  expect(isBackgroundMessage({ type: "rates", rates })).toBe(true);
+  expect(
+    isBackgroundMessage({
+      type: "rates",
+      rates: { ...rates, lastCheckedAt: -1 },
+    }),
+  ).toBe(false);
+  expect(
+    isBackgroundMessage({
+      type: "rates",
+      rates: { ...rates, lastCheckedAt: "now" },
+    }),
+  ).toBe(false);
+});
+it("validates the manual refresh flag", () => {
+  expect(isPopupMessage({ type: "refresh", kind: "crypto", force: true })).toBe(
+    true,
+  );
+  expect(isPopupMessage({ type: "refresh", kind: "fiat" })).toBe(true);
+  expect(
+    isPopupMessage({ type: "refresh", kind: "crypto", force: "true" }),
+  ).toBe(false);
+});
+it("accepts the popup heartbeat without accepting unknown messages", () => {
+  expect(isPopupMessage({ type: "ping" })).toBe(true);
+  expect(isPopupMessage({ type: "unknown" })).toBe(false);
+});
 it("rejects invalid canonical amounts and unknown currencies at IPC", () => {
   expect(
     isAction({

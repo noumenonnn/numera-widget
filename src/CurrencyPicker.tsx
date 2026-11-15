@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Check } from "lucide-react";
 import {
-  AnimatePresence,
-  motion,
   animate,
   useMotionValue,
   useMotionValueEvent,
@@ -11,9 +9,9 @@ import {
 import { normalize, type Currency } from "./catalog";
 import { currencyGroup, pickerCurrencies } from "./currency-groups";
 import type { Scope, Row, State } from "./state";
-import { advanceSticker } from "./gestures";
 import { createWheelInput } from "./wheel-input";
 import { tr } from "./i18n";
+import { easeOut } from "./motion";
 export type Picker = {
   kind: Scope;
   target?: string;
@@ -48,7 +46,6 @@ export function CurrencyPicker({
           ),
     );
   });
-  const [sticker, setSticker] = useState(false);
   const position = useMotionValue(index);
   const [paintedPosition, setPaintedPosition] = useState(index);
   const targetPosition = useRef(index);
@@ -58,13 +55,12 @@ export function CurrencyPicker({
   useEffect(() => () => animation.current?.stop(), []);
   const search = useRef<HTMLInputElement>(null);
   const wheelGesture = useRef<{
+    pointerId: number;
     y: number;
     start: number;
     moved: boolean;
-    lastStep: number;
   } | null>(null);
   const wheelMoved = useRef(false);
-  const wheelProgress = useRef({ distance: 0, visible: false, remaining: 0 });
   const wheelInput = useRef(createWheelInput());
   useEffect(() => {
     const timer = setTimeout(() => search.current?.focus(), 40);
@@ -95,33 +91,34 @@ export function CurrencyPicker({
     options.length
       ? ((value % options.length) + options.length) % options.length
       : 0;
-  const moveTo = (next: number, immediate = false) => {
-    animation.current?.stop();
+  const moveTo = (next: number, immediate = false, settle = false) => {
     targetPosition.current = next;
     setIndex(wrap(Math.round(next)));
-    if (immediate || reducedMotion) position.set(next);
-    else
-      animation.current = animate(position, next, {
-        duration: 0.2,
-        ease: [0.22, 1, 0.36, 1],
-      });
+    if (immediate || reducedMotion) {
+      animation.current?.stop();
+      position.set(next);
+    } else
+      animation.current = animate(
+        position,
+        next,
+        settle
+          ? { type: "spring", duration: 0.5, bounce: 0.2 }
+          : { duration: 0.16, ease: easeOut },
+      );
   };
-  const countWheelSteps = (steps: number) => {
-    const next = advanceSticker(wheelProgress.current, steps, options.length);
-    if (next.visible !== wheelProgress.current.visible)
-      setSticker(next.visible);
-    wheelProgress.current = next;
-  };
-  const stepWheel = (steps: number) => {
+  const stepWheel = (steps: number, immediate = false) => {
     if (options.length < 2) return;
-    countWheelSteps(steps);
-    moveTo(targetPosition.current + steps);
+    moveTo(targetPosition.current + steps, immediate);
   };
 
   return (
     <>
       <header className="picker-header">
-        <button className="back" aria-label={t.back} onClick={() => onClose()}>
+        <button
+          className="icon back"
+          aria-label={t.back}
+          onClick={() => onClose()}
+        >
           <ArrowLeft size={20} />
         </button>
         <div className="search">
@@ -141,21 +138,15 @@ export function CurrencyPicker({
             onChange={(e) => {
               setQuery(e.target.value);
               moveTo(0, true);
-              wheelProgress.current = {
-                distance: 0,
-                visible: false,
-                remaining: 0,
-              };
-              setSticker(false);
             }}
             onKeyDown={(e) => {
               if (e.key === "Escape") onClose();
               else if (e.key === "ArrowDown") {
                 e.preventDefault();
-                stepWheel(1);
+                stepWheel(1, true);
               } else if (e.key === "ArrowUp") {
                 e.preventDefault();
-                stepWheel(-1);
+                stepWheel(-1, true);
               } else if (e.key === "Home") {
                 e.preventDefault();
                 moveTo(0, true);
@@ -164,10 +155,10 @@ export function CurrencyPicker({
                 moveTo(options.length - 1, true);
               } else if (e.key === "PageDown") {
                 e.preventDefault();
-                stepWheel(5);
+                stepWheel(5, true);
               } else if (e.key === "PageUp") {
                 e.preventDefault();
-                stepWheel(-5);
+                stepWheel(-5, true);
               } else if (e.key === "Enter" && options[safeIndex])
                 onChoose(options[safeIndex]);
             }}
@@ -188,19 +179,19 @@ export function CurrencyPicker({
           if (steps) stepWheel(steps);
         }}
         onPointerDown={(e) => {
-          if (e.button !== 0) return;
+          if (e.button !== 0 || !e.isPrimary || wheelGesture.current) return;
           animation.current?.stop();
           wheelMoved.current = false;
           wheelGesture.current = {
+            pointerId: e.pointerId,
             y: e.clientY,
             start: position.get(),
             moved: false,
-            lastStep: 0,
           };
         }}
         onPointerMove={(e) => {
           const g = wheelGesture.current;
-          if (!g) return;
+          if (!g || g.pointerId !== e.pointerId) return;
           const delta = e.clientY - g.y;
           if (Math.abs(delta) > 8) {
             if (!g.moved) {
@@ -209,28 +200,23 @@ export function CurrencyPicker({
               e.currentTarget.setPointerCapture(e.pointerId);
             }
             const next = g.start - delta / 42;
-            const step = Math.round(next) - Math.round(g.start);
-            countWheelSteps(step - g.lastStep);
-            g.lastStep = step;
             moveTo(next, true);
           }
         }}
         onPointerUp={(e) => {
           const g = wheelGesture.current;
-          if (!g) return;
+          if (!g || g.pointerId !== e.pointerId) return;
           if (g.moved) {
             const next = Math.round(g.start - (e.clientY - g.y) / 42);
-            const step = next - Math.round(g.start);
-            countWheelSteps(step - g.lastStep);
-            moveTo(next);
+            moveTo(next, false, true);
             setTimeout(() => {
               wheelMoved.current = false;
             }, 0);
-          } else moveTo(Math.round(position.get()));
+          } else moveTo(Math.round(position.get()), false, true);
           wheelGesture.current = null;
         }}
         onPointerCancel={() => {
-          moveTo(Math.round(position.get()));
+          moveTo(Math.round(position.get()), false, true);
           wheelGesture.current = null;
           wheelMoved.current = false;
         }}
@@ -239,10 +225,10 @@ export function CurrencyPicker({
           if (e.key === "Escape") onClose();
           else if (e.key === "ArrowDown") {
             e.preventDefault();
-            stepWheel(1);
+            stepWheel(1, true);
           } else if (e.key === "ArrowUp") {
             e.preventDefault();
-            stepWheel(-1);
+            stepWheel(-1, true);
           } else if (e.key === "Home") {
             e.preventDefault();
             moveTo(0, true);
@@ -302,20 +288,6 @@ export function CurrencyPicker({
           <p>{t.empty}</p>
         )}
       </div>
-      <AnimatePresence>
-        {sticker && (
-          <motion.img
-            className="wheel-sticker"
-            src="stickers/wheel.webp"
-            alt=""
-            aria-hidden="true"
-            initial={{ opacity: 0, x: 150, y: 150 }}
-            animate={{ opacity: 1, x: 0, y: 0 }}
-            exit={{ opacity: 0, x: 150, y: 150 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          />
-        )}
-      </AnimatePresence>
     </>
   );
 }

@@ -50,9 +50,11 @@ async function add(path) {
 for (const root of roots) await add(root);
 await mkdir("artifacts", { recursive: true });
 const runtime = `artifacts/numera-${pkg.version}.zip`;
+const chrome = `artifacts/numera-${pkg.version}-chrome.zip`;
 const source = `artifacts/numera-${pkg.version}-source.zip`;
-// Check the matching runtime exists before emitting a source submission.
+// Require both browser packages before emitting the matching source submission.
 const runtimeBytes = await readFile(runtime);
+const chromeBytes = await readFile(chrome);
 await writeFile(
   source,
   await zip.generateAsync({
@@ -66,6 +68,7 @@ await writeFile(
   "artifacts/SHA256SUMS.txt",
   [
     `${digest(runtimeBytes)}  numera-${pkg.version}.zip`,
+    `${digest(chromeBytes)}  numera-${pkg.version}-chrome.zip`,
     `${digest(await readFile(source))}  numera-${pkg.version}-source.zip`,
     "",
   ].join("\n"),

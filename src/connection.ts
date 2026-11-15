@@ -19,7 +19,9 @@ export function createConnection(
     attempts = 0;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let snapshotTimer: ReturnType<typeof setTimeout> | undefined;
+  let heartbeat: ReturnType<typeof setInterval> | undefined;
   const retry = () => {
+    clearInterval(heartbeat);
     if (closed) return;
     disconnected();
     if (attempts < 5)
@@ -52,6 +54,9 @@ export function createConnection(
         fresh = false;
         attempts = 0;
         clearTimeout(snapshotTimer);
+        // A port alone does not keep a Chrome MV3 worker alive. Send traffic
+        // only while the popup is mounted so its rate timer can still run.
+        heartbeat = setInterval(() => send({ type: "ping" }), 20000);
       }
       receive(raw, first);
     });
@@ -85,6 +90,7 @@ export function createConnection(
     },
     close: () => {
       closed = true;
+      clearInterval(heartbeat);
       clearTimeout(timer);
       clearTimeout(snapshotTimer);
       const p = port;

@@ -59,12 +59,16 @@ export function isAction(x: unknown): x is Action {
   }
 }
 export type PopupMessage =
-  | { type: "refresh"; kind: Kind }
+  | { type: "ping" }
+  | { type: "refresh"; kind: Kind; force?: boolean }
   | { type: "action"; id: string; action: Action };
 export function isPopupMessage(x: unknown): x is PopupMessage {
   return (
     object(x) &&
-    ((x.type === "refresh" && kind(x.kind)) ||
+    (x.type === "ping" ||
+      (x.type === "refresh" &&
+        kind(x.kind) &&
+        (x.force === undefined || typeof x.force === "boolean")) ||
       (x.type === "action" && text(x.id) && isAction(x.action)))
   );
 }
@@ -156,7 +160,7 @@ function validRates(x: unknown): x is Rates {
         (key !== "USDT" || new Decimal(value).eq(1)),
     ) &&
     (x.q === undefined || (typeof x.q === "string" && !!positive(x.q))) &&
-    [x.fxAt, x.cryptoAt, x.qAt].every(time) &&
+    [x.fxAt, x.cryptoAt, x.qAt, x.lastCheckedAt].every(time) &&
     (x.cryptoFetchedAt === undefined ||
       (object(x.cryptoFetchedAt) &&
         Object.entries(x.cryptoFetchedAt).every(

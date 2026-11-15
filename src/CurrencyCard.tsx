@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction, RefObject } from "react";
-import { motion } from "motion/react";
+import { motion, useIsPresent, useReducedMotion } from "motion/react";
 import { ChevronsUpDown } from "lucide-react";
 import { byCode } from "./catalog";
 import type { Scope, Row, State, Action } from "./state";
@@ -9,6 +9,7 @@ import { gestureOutcome } from "./gestures";
 import { tr } from "./i18n";
 import type { Notice } from "./Toast";
 import type { Picker } from "./CurrencyPicker";
+import { easeOut, isKeyboardInteraction } from "./motion";
 type Set<T> = Dispatch<SetStateAction<T>>;
 type Drag = { id: string; targetIndex: number; offset: number };
 type Gesture = {
@@ -91,14 +92,24 @@ export function CurrencyCard({
 }) {
   const c = byCode(row.code),
     t = tr[locale];
+  const reducedMotion = useReducedMotion();
+  const isPresent = useIsPresent();
+  const keyboard = isKeyboardInteraction();
+  const resting = "translateX(0) scale(1)";
+  const hidden = reducedMotion ? resting : "translateX(0) scale(0.97)";
   return (
     <motion.div
       key={row.rowId}
-      className="card-wrap"
-      initial={{ opacity: 0, scale: 0.97 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.97 }}
-      transition={{ duration: 0.18 }}
+      className={"card-wrap" + (offsetX ? " swiping" : "")}
+      initial={keyboard ? false : { opacity: 0, transform: hidden }}
+      animate={{ opacity: 1, transform: resting }}
+      exit={{
+        opacity: 0,
+        transform:
+          offsetX && !reducedMotion ? "translateX(-100%) scale(1)" : hidden,
+      }}
+      transition={{ duration: keyboard ? 0 : 0.18, ease: easeOut }}
+      inert={!isPresent}
     >
       {Boolean(offsetX) && (
         <div className="swipe-action">
@@ -115,8 +126,8 @@ export function CurrencyCard({
       <div
         className={"card " + (drag?.id === row.rowId ? "dragging" : "")}
         style={{
-          translate: `${offsetX || 0}px 0`,
-          transform: `translateY(${drag?.id === row.rowId ? drag.offset : displacement * (gesture.current?.step || 90)}px)`,
+          transform: `translate3d(${offsetX || 0}px, ${drag?.id === row.rowId ? drag.offset : displacement * (gesture.current?.step || 90)}px, 0)`,
+          transition: gesture.current?.id === row.rowId ? "none" : undefined,
           cursor:
             i === 0 ? "default" : drag?.id === row.rowId ? "grabbing" : "grab",
         }}
@@ -138,7 +149,9 @@ export function CurrencyCard({
         onPointerDown={(e) => {
           if (
             (e.target as HTMLElement).closest("input,button,summary,label") ||
-            e.button !== 0
+            e.button !== 0 ||
+            !e.isPrimary ||
+            gesture.current
           )
             return;
           if (e.pointerType === "mouse") e.preventDefault();
@@ -304,10 +317,14 @@ export function CurrencyCard({
         </button>
       </div>
       {p && p.status === "ambiguous" && (
-        <div className="error" role={active ? undefined : "status"}>
+        <div className="currency-choices" role={active ? undefined : "status"}>
           {p.choices.map((x) => (
             <button
               key={x.code}
+              type="button"
+              className="currency-chip"
+              aria-label={`${x.code}: ${x.name[locale]}`}
+              title={x.name[locale]}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => {
                 updateRow(kind, row.rowId, x.code, p.amount);
@@ -319,6 +336,11 @@ export function CurrencyCard({
                     currency: x,
                   },
                 }));
+                const focusId =
+                  i > 0 && rows[0].code === x.code ? rows[0].rowId : row.rowId;
+                requestAnimationFrame(() =>
+                  document.getElementById(focusId)?.focus(),
+                );
               }}
             >
               {x.code}

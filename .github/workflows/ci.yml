@@ -2,7 +2,7 @@ name: CI
 on:
   push:
     branches: [main]
-    tags: ['v*']
+    tags: ["v*"]
   pull_request:
   workflow_dispatch:
 permissions:
@@ -20,9 +20,13 @@ jobs:
       - run: npm ci
       - run: npm run verify
       - run: npm run package
+      - run: npm run package:chrome
       - run: npm run package:source
       - uses: actions/upload-artifact@v7.0.2
         with:
           name: numera-packages
-          path: artifacts/*.zip
+          path: |
+            artifacts/*.zip
+            artifacts/*.sha256
+            artifacts/SHA256SUMS.txt
           if-no-files-found: error

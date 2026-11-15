@@ -2,16 +2,14 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Settings,
-  RefreshCcw,
   Plus,
   ChevronsUpDown,
-  ChevronsDownUp,
   Sun,
   Moon,
   Monitor,
   X,
 } from "lucide-react";
-import { AnimatePresence, motion, MotionConfig } from "motion/react";
+import { AnimatePresence, MotionConfig } from "motion/react";
 import "@fontsource-variable/geist";
 import "./style.css";
 import { catalog, byCode, rateTable, type Currency } from "./catalog";
@@ -35,6 +33,7 @@ import {
   type Row,
 } from "./state";
 import { createConnection } from "./connection";
+import { extensionApi } from "./browser-api";
 import { tr } from "./i18n";
 import { RateNotice } from "./RateNotice";
 import { CurrencyPicker, type Picker } from "./CurrencyPicker";
@@ -48,13 +47,20 @@ import {
 } from "./CurrencyRow";
 import { CurrencyCard } from "./CurrencyCard";
 import { DraftInput } from "./DraftInput";
+import { RefreshIcon } from "./RefreshIcon";
+import { ShareLinks } from "./ShareLinks";
 import { usePaintedSnapshot } from "./use-painted-snapshot";
+import { formatCheckTime, latestDataUpdate } from "./rate-timestamps";
+import { RateList } from "./RateList";
+import { easeOut, isKeyboardInteraction, trackInputModality } from "./motion";
 function App() {
+  useEffect(trackInputModality, []);
   const [state, setState] = useState<State | null>(null),
     [rates, setRates] = useState<Rates>(emptyRates),
     [fetching, setFetching] = useState(true),
+    [refreshRequest, setRefreshRequest] = useState(0),
+    [quickRatesExpanded, setQuickRatesExpanded] = useState(false),
     [connectionLost, setConnectionLost] = useState(false),
-    [nextWakeAt, setNextWakeAt] = useState(0),
     [view, setView] = useState<"main" | "settings" | "picker">("main"),
     [picker, setPicker] = useState<Picker | null>(null),
     [draft, setDraft] = useState<Record<string, string>>({}),
@@ -67,6 +73,7 @@ function App() {
     pendingActions = useRef<Array<{ id: string; action: Action }>>([]),
     ratesRef = useRef<Rates>(rates),
     returnFocus = useRef<string | null>(null),
+    initialFocusApplied = useRef(false),
     scrollRef = useRef<HTMLElement>(null),
     gesture = useRef<{
       id: string;
@@ -164,7 +171,7 @@ function App() {
   );
   useEffect(() => {
     const connection = createConnection(
-      () => browser.runtime.connect({ name: "popup" }),
+      () => extensionApi.runtime.connect({ name: "popup" }),
       (msg, fresh) => {
         if (fresh) setConnectionLost(false);
         if (msg.type === "rate-status") {
@@ -172,7 +179,6 @@ function App() {
           return;
         }
         if (msg.type === "rates") {
-          setNextWakeAt(msg.nextWakeAt || 0);
           ratesRef.current = msg.rates;
           setRates(msg.rates);
           return;
@@ -234,6 +240,14 @@ function App() {
     if (locale) document.documentElement.lang = locale;
   }, [locale]);
   useEffect(() => {
+    if (initialFocusApplied.current || !activeRows?.length) return;
+    const input = document.getElementById(activeRows[0].rowId);
+    if (input instanceof HTMLInputElement) {
+      initialFocusApplied.current = true;
+      input.focus({ preventScroll: true });
+    }
+  }, [activeRows]);
+  useEffect(() => {
     if (!activeKind) return;
     setFetching(true);
     port.current?.send({ type: "refresh", kind: "crypto" });
@@ -246,11 +260,10 @@ function App() {
   }, [activeKind]);
   useEffect(() => {
     if (view === "settings") {
-      const id = window.setTimeout(
-        () => document.getElementById("settings-heading")?.focus(),
-        190,
+      const id = requestAnimationFrame(() =>
+        document.getElementById("settings-heading")?.focus(),
       );
-      return () => clearTimeout(id);
+      return () => cancelAnimationFrame(id);
     }
   }, [view]);
   useEffect(() => {
@@ -265,23 +278,19 @@ function App() {
       }
       if (view === "settings") {
         setView("main");
-        setTimeout(
-          () =>
-            document
-              .querySelector<HTMLElement>('[data-focus-id=\"settings\"]')
-              ?.focus(),
-          220,
+        requestAnimationFrame(() =>
+          document
+            .querySelector<HTMLElement>('[data-focus-id=\"settings\"]')
+            ?.focus(),
         );
       } else if (view === "picker" && picker) {
         setView(picker.returnView);
         const id = returnFocus.current;
         if (id)
-          setTimeout(
-            () =>
-              document
-                .querySelector<HTMLElement>(`[data-focus-id=\"${id}\"]`)
-                ?.focus(),
-            220,
+          requestAnimationFrame(() =>
+            document
+              .querySelector<HTMLElement>(`[data-focus-id=\"${id}\"]`)
+              ?.focus(),
           );
       }
     };
@@ -339,10 +348,10 @@ function App() {
   }
   const t = tr[state.locale],
     tab = state.converter;
-  const updatedAt =
-    rates.fxAt && rates.cryptoAt
-      ? Math.min(rates.fxAt, rates.cryptoAt)
-      : undefined;
+  const updatedAt = latestDataUpdate(rates);
+  const lastCheckedTitle = rates.lastCheckedAt
+    ? `${t.lastChecked}: ${formatCheckTime(rates.lastCheckedAt)}`
+    : undefined;
   const setViewPicker = (request: Picker) => {
     returnFocus.current =
       (document.activeElement as HTMLElement)?.dataset.focusId || null;
@@ -353,12 +362,10 @@ function App() {
     setView(view);
     const id = returnFocus.current;
     if (id)
-      setTimeout(
-        () =>
-          document
-            .querySelector<HTMLElement>(`[data-focus-id=\"${id}\"]`)
-            ?.focus(),
-        220,
+      requestAnimationFrame(() =>
+        document
+          .querySelector<HTMLElement>(`[data-focus-id=\"${id}\"]`)
+          ?.focus(),
       );
   };
   const updateRow = (
@@ -438,24 +445,13 @@ function App() {
     closePicker(p.returnView);
   };
   const shake = (element: HTMLElement | null) => {
-    if (!element) return;
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      element.animate([{ opacity: 1 }, { opacity: 0.45 }, { opacity: 1 }], {
-        duration: 260,
-        easing: "ease-out",
-      });
-      return;
-    }
-    element.animate(
-      [
-        { transform: "translateX(0)" },
-        { transform: "translateX(-5px)" },
-        { transform: "translateX(5px)" },
-        { transform: "translateX(-3px)" },
-        { transform: "translateX(0)" },
-      ],
-      { duration: 260, easing: "ease-out" },
-    );
+    // The inline error and aria-invalid provide immediate keyboard feedback.
+    if (!element || isKeyboardInteraction()) return;
+    for (const animation of element.getAnimations()) animation.cancel();
+    element.animate([{ opacity: 1 }, { opacity: 0.6 }, { opacity: 1 }], {
+      duration: 200,
+      easing: `cubic-bezier(${easeOut.join(",")})`,
+    });
   };
   const apply = (row: Row, text: string, confirmedInput = false) => {
     const result = parseInput(text, byCode(row.code), confirmedInput);
@@ -570,12 +566,10 @@ function App() {
     <MotionConfig reducedMotion="user">
       <RowInputsProvider value={inputs}>
         <div className="app" data-theme={state.theme} data-view={view}>
-          <motion.div
+          <div
             key={view}
             className="surface"
-            initial={{ y: 6 }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+            data-animate={initialFocusApplied.current}
           >
             {view === "main" ? (
               <>
@@ -587,11 +581,20 @@ function App() {
                     title={t.refresh}
                     disabled={fetching || connectionLost}
                     aria-busy={fetching}
-                    onClick={() =>
-                      port.current?.send({ type: "refresh", kind: "crypto" })
-                    }
+                    onClick={() => {
+                      setRefreshRequest((request) => request + 1);
+                      setFetching(true);
+                      port.current?.send({
+                        type: "refresh",
+                        kind: "crypto",
+                        force: true,
+                      });
+                    }}
                   >
-                    <RefreshCcw size={18} />
+                    <RefreshIcon
+                      refreshing={fetching}
+                      requestId={refreshRequest}
+                    />
                   </button>
                   <button
                     className="icon settings"
@@ -821,78 +824,39 @@ function App() {
                   )}
                   <button
                     className="rate"
-                    aria-expanded={tab.expanded}
+                    aria-expanded={quickRatesExpanded}
                     aria-controls="rate-list"
                     onClick={() =>
-                      dispatch({
-                        type: "expand",
-                        kind: "converter",
-                        expanded: !tab.expanded,
-                      })
+                      setQuickRatesExpanded((expanded) => !expanded)
                     }
                   >
                     <span>
                       1 {tab.rows[0].code} = {quote(rate(tab.rows[1].code))}{" "}
                       {tab.rows[1].code}
                     </span>
-                    {tab.expanded ? (
-                      <ChevronsDownUp size={18} />
-                    ) : (
-                      <ChevronsUpDown size={18} />
-                    )}
+                    <ChevronsUpDown
+                      className="rate-toggle-icon"
+                      size={18}
+                      aria-hidden="true"
+                    />
                   </button>
                   <AnimatePresence initial={false}>
-                    {tab.expanded && (
-                      <motion.div
-                        id="rate-list"
-                        className="rate-list"
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{
-                          duration: 0.2,
-                          ease: [0.22, 1, 0.36, 1],
-                        }}
-                        onAnimationComplete={() => {
-                          window.setTimeout(() => {
-                            const current = stateRef.current;
-                            const scroller = scrollRef.current;
-                            if (current?.converter.expanded && scroller)
-                              scroller.scrollTo({
-                                top: scroller.scrollHeight,
-                                behavior: matchMedia(
-                                  "(prefers-reduced-motion: reduce)",
-                                ).matches
-                                  ? "auto"
-                                  : "smooth",
-                              });
-                          }, 120);
-                        }}
-                        style={{ overflow: "hidden" }}
-                      >
-                        {rateTable.map((code) => {
+                    {quickRatesExpanded && (
+                      <RateList scrollRef={scrollRef}>
+                        {rateTable.map((code, index) => {
                           const status = rateStatus(
                             byCode(tab.rows[0].code),
                             byCode(code),
                             rates,
                           );
-                          const date =
-                            byCode(code).kind === "fiat"
-                              ? rates.fx[code]?.date
-                              : undefined;
                           return (
                             <div
                               key={code}
-                              title={[
-                                date,
-                                status === "stale"
-                                  ? t.stale
-                                  : status === "unavailable"
-                                    ? t.unavailable
-                                    : "",
-                              ]
-                                .filter(Boolean)
-                                .join(" · ")}
+                              className="rate-row"
+                              title={lastCheckedTitle}
+                              style={
+                                { "--rate-order": index } as React.CSSProperties
+                              }
                             >
                               <img src={byCode(code).icon} alt="" />
                               <span className="rate-currency-name">
@@ -919,21 +883,20 @@ function App() {
                           );
                         })}
                         {updatedAt && (
-                          <small>
+                          <small className="data-updated">
                             {t.updated}:{" "}
                             {new Date(updatedAt).toLocaleString(
                               state.locale === "ru" ? "ru-RU" : "en-US",
                             )}
                           </small>
                         )}
-                      </motion.div>
+                      </RateList>
                     )}
                   </AnimatePresence>
                   <RateNotice
                     rates={rates}
                     kind="crypto"
                     locale={state.locale}
-                    nextWakeAt={nextWakeAt}
                     onDenied={() => setNotice({ text: t.permissionDenied })}
                     onRetry={() => {
                       port.current?.reconnect();
@@ -956,14 +919,12 @@ function App() {
                     className="icon"
                     onClick={() => {
                       setView("main");
-                      setTimeout(
-                        () =>
-                          document
-                            .querySelector<HTMLElement>(
-                              '[data-focus-id=\"settings\"]',
-                            )
-                            ?.focus(),
-                        220,
+                      requestAnimationFrame(() =>
+                        document
+                          .querySelector<HTMLElement>(
+                            '[data-focus-id=\"settings\"]',
+                          )
+                          ?.focus(),
                       );
                     }}
                     aria-label={t.back}
@@ -1046,10 +1007,11 @@ function App() {
                       <ChevronsUpDown size={18} />
                     </button>
                   </div>
+                  <ShareLinks locale={state.locale} />
                 </main>
                 <div className="brand">
                   <img src="icons/numera-128.png" alt="" /> Numera{" "}
-                  <span>v{browser.runtime.getManifest().version}</span>
+                  <span>v{extensionApi.runtime.getManifest().version}</span>
                 </div>
               </>
             ) : null}
@@ -1063,15 +1025,13 @@ function App() {
                 onClose={() => closePicker(picker.returnView)}
               />
             )}
-          </motion.div>
-          {notice && (
-            <Toast
-              notice={notice}
-              setNotice={setNotice}
-              undoLabel={t.undo}
-              dismissLabel={t.dismiss}
-            />
-          )}
+          </div>
+          <Toast
+            notice={notice}
+            setNotice={setNotice}
+            undoLabel={t.undo}
+            dismissLabel={t.dismiss}
+          />
         </div>
       </RowInputsProvider>
     </MotionConfig>

@@ -72,7 +72,8 @@ export function createRateService(deps: {
   };
   let ready: Promise<Rates> | undefined,
     pending: Promise<Rates> | undefined,
-    pendingKind: Kind | undefined;
+    pendingKind: Kind | undefined,
+    pendingForced = false;
   const load = async () => {
     ready ??= (async () => {
       let raw: Partial<Data> | undefined;
@@ -136,6 +137,7 @@ export function createRateService(deps: {
         restored.fxAt = time(candidate.fxAt);
         restored.cryptoAt = time(candidate.cryptoAt);
         restored.qAt = time(candidate.qAt);
+        restored.lastCheckedAt = time(candidate.lastCheckedAt);
         if (
           candidate.cryptoFetchedAt &&
           typeof candidate.cryptoFetchedAt === "object"
@@ -267,14 +269,18 @@ export function createRateService(deps: {
       throw new PayloadError(String(error));
     }
   }
-  async function refresh(kind: Kind): Promise<Rates> {
+  async function refresh(kind: Kind, force = false): Promise<Rates> {
     await load();
     if (pending) {
       const previous = pendingKind;
+      const wasForced = pendingForced;
       const result = await pending;
-      return kind === "crypto" && previous === "fiat" ? refresh(kind) : result;
+      return (kind === "crypto" && previous === "fiat") || (force && !wasForced)
+        ? refresh(kind, force)
+        : result;
     }
     pendingKind = kind;
+    pendingForced = force;
     pending = (async () => {
       const now = deps.now(),
         old = data.rates,
@@ -282,7 +288,7 @@ export function createRateService(deps: {
       const tasks: Promise<void>[] = [];
       tasks.push(
         (async () => {
-          if (!old.fxAt || now - old.fxAt >= 3600000) {
+          if (force || !old.fxAt || now - old.fxAt >= 3600000) {
             const fx = await attempt("Frankfurter", async () =>
               read("https://api.frankfurter.dev/v2/rates?base=usd", (text) =>
                 parseFx(text, deps.now()),
@@ -298,7 +304,7 @@ export function createRateService(deps: {
       if (kind === "crypto") {
         tasks.push(
           (async () => {
-            if (!old.cryptoAt || now - old.cryptoAt >= 60000) {
+            if (force || !old.cryptoAt || now - old.cryptoAt >= 60000) {
               const quotes = await attempt("Binance", async () => {
                 if (
                   !data.exchange.verified ||
@@ -350,7 +356,7 @@ export function createRateService(deps: {
         tasks.push(
           (async () => {
             const updatedAt = krakenUpdatedAt(old);
-            if (updatedAt === undefined || now - updatedAt >= 60000) {
+            if (force || updatedAt === undefined || now - updatedAt >= 60000) {
               const quotes = await attempt("Kraken", async () =>
                 read(
                   `https://api.kraken.com/0/public/Ticker?pair=${["USDTUSD", ...krakenCurrencies.map((currency) => currency.krakenPair)].join(",")}`,
@@ -374,6 +380,7 @@ export function createRateService(deps: {
         );
       }
       await Promise.all(tasks);
+      next.lastCheckedAt = deps.now();
       next.errors = Object.fromEntries(
         Object.entries(data.policies)
           .filter(([, p]) => p.lastError)

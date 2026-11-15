@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
+import { useReducedMotion } from "motion/react";
+import { isKeyboardInteraction } from "./motion";
 export type Notice = {
   text: string;
   undo?: () => boolean | void;
@@ -11,54 +13,85 @@ export function Toast({
   undoLabel,
   dismissLabel,
 }: {
-  notice: Notice;
+  notice: Notice | null;
   setNotice: React.Dispatch<React.SetStateAction<Notice | null>>;
   undoLabel: string;
   dismissLabel: string;
 }) {
   const toastRef = useRef<HTMLDivElement>(null);
+  const returnFocus = useRef<HTMLElement | null>(null);
+  const reducedMotion = useReducedMotion();
+  const [displayedNotice, setDisplayedNotice] = useState(notice);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const toastGesture = useRef<{
     pointerId: number;
     x: number;
     y: number;
     dx: number;
+    time: number;
     axis: "x" | "y" | null;
   } | null>(null);
   const [toastOffset, setToastOffset] = useState(0);
   const [toastDragging, setToastDragging] = useState(false);
-  const dismiss = useCallback(
-    () => setNotice((current) => (current === notice ? null : current)),
-    [notice, setNotice],
-  );
+  const dismiss = useCallback(() => {
+    if (toastRef.current?.contains(document.activeElement)) {
+      const target = returnFocus.current?.isConnected
+        ? returnFocus.current
+        : document.querySelector<HTMLElement>("[data-input]");
+      target?.focus({ preventScroll: true });
+    }
+    setNotice((current) => (current === notice ? null : current));
+  }, [notice, setNotice]);
   const pause = () => clearTimeout(timer.current);
   const resume = useCallback(() => {
     pause();
     if (
+      !notice ||
       toastGesture.current ||
       toastRef.current?.matches(":hover") ||
       toastRef.current?.contains(document.activeElement)
     )
       return;
     timer.current = setTimeout(dismiss, 6000);
-  }, [dismiss]);
+  }, [dismiss, notice]);
   useEffect(() => {
+    if (!notice) {
+      pause();
+      const exit = setTimeout(
+        () => setDisplayedNotice(null),
+        isKeyboardInteraction() ? 0 : 200,
+      );
+      return () => clearTimeout(exit);
+    }
+    setDisplayedNotice(notice);
     setToastOffset(0);
     setToastDragging(false);
     toastGesture.current = null;
     resume();
     return pause;
   }, [notice, resume]);
+  const content = notice || displayedNotice;
   return (
     <>
-      {notice && (
+      {content && (
         <div
           ref={toastRef}
           className={"toast" + (toastDragging ? " dragging" : "")}
+          data-open={!!notice}
           role="status"
-          style={{ transform: `translateX(${toastOffset}px)` }}
+          inert={!notice}
+          style={
+            toastOffset && !reducedMotion
+              ? { transform: `translateX(${toastOffset}px)` }
+              : undefined
+          }
           onPointerDown={(e) => {
-            if (e.button !== 0 || (e.target as HTMLElement).closest("button"))
+            if (
+              e.button !== 0 ||
+              !e.isPrimary ||
+              toastGesture.current ||
+              (e.target as HTMLElement).closest("button")
+            )
               return;
             if (e.pointerType === "mouse") e.preventDefault();
             pause();
@@ -67,6 +100,7 @@ export function Toast({
               x: e.clientX,
               y: e.clientY,
               dx: 0,
+              time: performance.now(),
               axis: null,
             };
             e.currentTarget.setPointerCapture(e.pointerId);
@@ -91,15 +125,12 @@ export function Toast({
             setToastDragging(false);
             if (
               g.axis === "x" &&
-              Math.abs(g.dx) >= Math.min(80, e.currentTarget.clientWidth * 0.25)
+              (Math.abs(g.dx) >=
+                Math.min(80, e.currentTarget.clientWidth * 0.25) ||
+                Math.abs(g.dx) / Math.max(1, performance.now() - g.time) > 0.11)
             ) {
               setToastOffset(Math.sign(g.dx) * window.innerWidth);
-              window.setTimeout(
-                () => dismiss(),
-                matchMedia("(prefers-reduced-motion: reduce)").matches
-                  ? 0
-                  : 180,
-              );
+              dismiss();
             } else {
               setToastOffset(0);
               resume();
@@ -123,7 +154,12 @@ export function Toast({
           onMouseLeave={() => {
             if (!toastRef.current?.contains(document.activeElement)) resume();
           }}
-          onFocus={pause}
+          onFocus={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget))
+              returnFocus.current =
+                e.relatedTarget instanceof HTMLElement ? e.relatedTarget : null;
+            pause();
+          }}
           onBlur={() =>
             setTimeout(() => {
               if (
@@ -135,14 +171,14 @@ export function Toast({
             }, 0)
           }
         >
-          <span>{notice.text}</span>
-          {notice.undo && (
+          <span>{content.text}</span>
+          {content.undo && (
             <button
               onClick={() => {
-                if (notice.undo?.() !== false) dismiss();
+                if (content.undo?.() !== false) dismiss();
               }}
             >
-              {notice.actionLabel || undoLabel}
+              {content.actionLabel || undoLabel}
             </button>
           )}
           <button

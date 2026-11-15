@@ -2,7 +2,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { deflateSync, inflateSync, crc32 } from "node:zlib";
 import assert from "node:assert/strict";
-for (const path of ["assets/source/wheel.png", "public/icons/numera.png"]) {
+for (const path of ["public/icons/numera.png"]) {
   const source = await readFile(path);
   const chunks = [];
   for (let offset = 8; offset < source.length;) {

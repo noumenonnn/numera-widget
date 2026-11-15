@@ -52,29 +52,3 @@ export function wheelIndex(start: number, dy: number, count: number): number {
   const next = start - Math.round(dy / 42);
   return ((next % count) + count) % count;
 }
-export type StickerProgress = {
-  distance: number;
-  visible: boolean;
-  remaining: number;
-};
-export function advanceSticker(
-  previous: StickerProgress,
-  steps: number,
-  count: number,
-): StickerProgress {
-  if (count <= 1 || steps === 0 || !Number.isFinite(steps)) return previous;
-  const next = { ...previous };
-  for (let i = 0; i < Math.floor(Math.abs(steps)); i++) {
-    if (next.visible) {
-      if (--next.remaining === 0) next.visible = false;
-    } else {
-      next.distance += Math.sign(steps);
-      if (Math.abs(next.distance) >= count * 10) {
-        next.distance = 0;
-        next.visible = true;
-        next.remaining = 10;
-      }
-    }
-  }
-  return next;
-}

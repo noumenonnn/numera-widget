@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { countryCurrencies } from "./country-currencies";
 import { catalog, normalize, type Currency, type Kind } from "./catalog";
 import type { RateIssue } from "./rate-errors";
 Decimal.set({
@@ -17,6 +18,7 @@ export type Rates = {
   fxAt?: number;
   cryptoAt?: number;
   qAt?: number;
+  lastCheckedAt?: number;
   error?: string;
   errors?: Record<string, string>;
 };
@@ -276,13 +278,17 @@ export function parseInput(
     return { status: "invalid", reason: "range" };
   if (!token) return { status: "valid", amount: value.toString() };
   const t = normalize(token);
-  const candidates = catalog.filter((c) =>
+  const exact = catalog.filter((c) =>
     [c.code, ...c.aliases, ...c.symbols, c.name.en, c.name.ru].some(
       (a) => normalize(a) === t,
     ),
   );
+  // Existing symbols/aliases take priority over colliding country codes (e.g. kr).
+  const countries = exact.length ? [] : countryCurrencies(token);
+  const candidates = exact.length ? exact : countries;
   if (!candidates.length) return { status: "pending", reason: "currency" };
   if (
+    !countries.length &&
     !confirmed &&
     !tokenHasBoundary &&
     catalog.some((c) =>
@@ -293,7 +299,7 @@ export function parseInput(
   )
     return { status: "pending", reason: "confirm" };
   const resolved =
-    candidates.length > 1
+    candidates.length > 1 && !countries.length
       ? candidates.filter((c) => c.code === current.code)
       : candidates;
   if (resolved.length === 1)

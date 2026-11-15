@@ -3,6 +3,11 @@ import type { Kind } from "./catalog";
 import { createRateService, FetchError } from "./rate-service";
 import { createStateStore } from "./state-store";
 import { isPopupMessage, type BackgroundMessage } from "./protocol";
+import { extensionApi } from "./browser-api";
+import {
+  createSelectionConverter,
+  isSelectionRequest,
+} from "./selection-conversion";
 let rates: Rates = structuredClone(emptyRates);
 const ports = new Set<browser.runtime.Port>();
 let refreshes = 0;
@@ -20,11 +25,11 @@ function schedule() {
     ),
   );
 }
-function refresh(kind: Kind) {
+function refresh(kind: Kind, force = false) {
   refreshes++;
   broadcast({ type: "rate-status", refreshing: true });
   void rateService
-    .refresh(kind)
+    .refresh(kind, force)
     .then((snapshot) => {
       rates = snapshot;
       broadcast({
@@ -39,6 +44,7 @@ function refresh(kind: Kind) {
         type: "rates",
         rates: {
           ...rates,
+          lastCheckedAt: Date.now(),
           error: "Refresh failed",
           issues: {
             ...rates.issues,
@@ -57,7 +63,7 @@ function refresh(kind: Kind) {
 }
 async function get(url: string) {
   const origin = new URL(url).origin + "/*";
-  if (!(await browser.permissions.contains({ origins: [origin] })))
+  if (!(await extensionApi.permissions.contains({ origins: [origin] })))
     throw new FetchError("permission-denied", 0, "permission-denied");
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 8000);
@@ -83,13 +89,13 @@ async function get(url: string) {
       );
     }
     const text = await res.text();
-    if (!(await browser.permissions.contains({ origins: [origin] })))
+    if (!(await extensionApi.permissions.contains({ origins: [origin] })))
       throw new FetchError("permission-denied", 0, "permission-denied");
     return text;
   } catch (error) {
     if (error instanceof FetchError && error.reason === "permission-denied")
       throw error;
-    if (!(await browser.permissions.contains({ origins: [origin] })))
+    if (!(await extensionApi.permissions.contains({ origins: [origin] })))
       throw new FetchError("permission-denied", 0, "permission-denied");
     if (error instanceof FetchError) throw error;
     throw new FetchError(
@@ -104,8 +110,8 @@ async function get(url: string) {
 const rateService = createRateService({
   storage: {
     load: async () =>
-      browser.storage.local.get(["rates", "policies", "exchange"]),
-    save: async (data) => browser.storage.local.set(data),
+      extensionApi.storage.local.get(["rates", "policies", "exchange"]),
+    save: async (data) => extensionApi.storage.local.set(data),
   },
   get,
   now: () => Date.now(),
@@ -114,7 +120,7 @@ const rateService = createRateService({
 const stateStore = createStateStore(
   {
     load: async () => {
-      const data = await browser.storage.local.get([
+      const data = await extensionApi.storage.local.get([
         "state",
         "stateRevision",
         "actionReceipts",
@@ -126,7 +132,7 @@ const stateStore = createStateStore(
       };
     },
     save: async (state, revision, receipts) => {
-      await browser.storage.local.set({
+      await extensionApi.storage.local.set({
         state,
         stateRevision: revision,
         actionReceipts: receipts,
@@ -143,8 +149,34 @@ const permissionChanged = () => {
       refresh([...consumers.values()].includes("crypto") ? "crypto" : "fiat");
   });
 };
-browser.permissions.onAdded.addListener(permissionChanged);
-browser.permissions.onRemoved.addListener(permissionChanged);
+const selectionConvert = createSelectionConverter({
+  state: async () => {
+    const snapshot = await stateStore.load();
+    if (snapshot.loadError) throw new Error("selection-settings-unavailable");
+    return snapshot.state;
+  },
+  load: () => rateService.load(),
+  refresh: async (kind) => {
+    rates = await rateService.refresh(kind);
+    broadcast({ type: "rates", rates });
+    return rates;
+  },
+});
+// A one-shot message wakes Chrome's worker without keeping it alive between selections.
+extensionApi.runtime.onMessage.addListener(
+  (message: unknown, sender, respond) => {
+    if (
+      !isSelectionRequest(message) ||
+      !sender.tab ||
+      !/^https?:\/\//.test(sender.url ?? "")
+    )
+      return false;
+    void selectionConvert(message.text).then(respond, () => respond(null));
+    return true;
+  },
+);
+extensionApi.permissions.onAdded.addListener(permissionChanged);
+extensionApi.permissions.onRemoved.addListener(permissionChanged);
 function send(port: browser.runtime.Port, data: BackgroundMessage) {
   try {
     port.postMessage(data);
@@ -155,7 +187,7 @@ function send(port: browser.runtime.Port, data: BackgroundMessage) {
 function broadcast(data: BackgroundMessage) {
   for (const p of ports) send(p, data);
 }
-browser.runtime.onConnect.addListener((port) => {
+extensionApi.runtime.onConnect.addListener((port) => {
   ports.add(port);
   port.onDisconnect.addListener(() => {
     ports.delete(port);
@@ -168,7 +200,7 @@ browser.runtime.onConnect.addListener((port) => {
     if (m.type === "refresh") {
       if (m.kind !== "fiat" && m.kind !== "crypto") return;
       consumers.set(port, m.kind);
-      refresh(m.kind);
+      refresh(m.kind, m.force);
     }
     if (m.type === "action")
       void stateStore

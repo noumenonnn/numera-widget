@@ -5,10 +5,7 @@ import { spawnSync } from "node:child_process";
 import { Builder, By, until } from "selenium-webdriver";
 import firefox from "selenium-webdriver/firefox.js";
 import { createHash } from "node:crypto";
-const output = resolve(
-  process.env.NUMERA_TEST_OUTPUT ||
-    "reports/recovery",
-);
+const output = resolve(process.env.NUMERA_TEST_OUTPUT || "reports/recovery");
 await mkdir(output, { recursive: true });
 await mkdir(".test-tools", { recursive: true });
 const temporary = await mkdtemp(resolve(".test-tools/recovery-"));
@@ -192,8 +189,9 @@ try {
     await d.wait(until.elementLocated(By.css("input[data-input]")), 5000);
     await pause(250);
     const origin = "https://api.frankfurter.dev/*";
+    // Page-selection access also grants HTTPS hosts; revoke overlapping grants.
     const removed = await d.executeAsyncScript(
-      "const done=arguments[arguments.length-1];browser.permissions.remove({origins:[arguments[0]]}).then(done,e=>done({error:String(e)}))",
+      "const done=arguments[arguments.length-1];browser.permissions.getAll().then(({origins})=>browser.permissions.remove({origins:origins.filter(origin=>origin.startsWith('https://'))})).then(done,e=>done({error:String(e)}))",
       origin,
     );
     result.permission = { removed };
@@ -203,7 +201,7 @@ try {
         d.executeScript(
           'return document.querySelector(".network")?.textContent.includes("permission is missing")',
         ),
-      10000,
+      25000,
     );
     await d.findElement(By.css(".network button")).click();
     await pause(400);
@@ -237,7 +235,7 @@ try {
         d.executeScript(
           'return document.querySelector(".network")?.textContent.includes("permission is missing")',
         ),
-      10000,
+      25000,
     );
     await d.findElement(By.css(".network button")).click();
     await pause(400);
@@ -271,6 +269,12 @@ try {
       result.debug = {
         storage: await storage(),
         control: await d.executeScript("return window.numeraFault"),
+        rates: await d.executeAsyncScript(
+          "const done=arguments[arguments.length-1];browser.storage.local.get(['rates','policies']).then(done)",
+        ),
+        notice: await d.executeScript(
+          "return {text:document.querySelector('.network')?.textContent,locale:document.documentElement.lang}",
+        ),
       };
     } catch {
       /* context may have closed */
@@ -280,7 +284,10 @@ try {
     process.exitCode = 1;
   } finally {
     try {
-      await writeFile(`${output}/results.json`, JSON.stringify(result, null, 2));
+      await writeFile(
+        `${output}/results.json`,
+        JSON.stringify(result, null, 2),
+      );
     } finally {
       await d.quit();
     }

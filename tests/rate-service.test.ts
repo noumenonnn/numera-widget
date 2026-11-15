@@ -261,6 +261,85 @@ function memory(): RateStorage {
   };
 }
 describe("shared rate service", () => {
+  it("records and restores the last completed check even when quotes are unchanged or a provider fails", async () => {
+    let now = 1000000,
+      failed = false,
+      calls = 0;
+    const storage = memory();
+    const deps = {
+      storage,
+      now: () => now,
+      jitter: () => 0,
+      get: async () => {
+        calls++;
+        if (failed) throw new Error("offline");
+        return fx;
+      },
+    };
+    const service = createRateService(deps);
+    const first = await service.refresh("fiat", true);
+    expect(first.lastCheckedAt).toBe(now);
+    now += 1000;
+    const unchanged = await service.refresh("fiat", true);
+    expect(unchanged.fx.RUB.rate).toBe(first.fx.RUB.rate);
+    expect(unchanged.lastCheckedAt).toBe(now);
+    const lastSuccess = unchanged.fxAt;
+    failed = true;
+    now += 1000;
+    const offline = await service.refresh("fiat", true);
+    expect(offline.fxAt).toBe(lastSuccess);
+    expect(offline.lastCheckedAt).toBe(now);
+    expect(offline.fx.RUB.rate).toBe(first.fx.RUB.rate);
+    now += 1000;
+    const deferred = await service.refresh("fiat", true);
+    expect(calls).toBe(3);
+    expect(deferred.lastCheckedAt).toBe(now);
+    expect((await createRateService(deps).load()).lastCheckedAt).toBe(now);
+  });
+  it("manual refresh fetches fresh fiat and crypto quotes while automatic refresh keeps its cache", async () => {
+    const calls: string[] = [];
+    const service = createRateService({
+      storage: memory(),
+      now: () => 1000000,
+      jitter: () => 0,
+      get: async (url) => {
+        calls.push(url);
+        if (url.includes("frankfurter")) return fx;
+        if (url.includes("exchangeInfo")) return exchange;
+        if (url.includes("binance")) return prices;
+        return kraken;
+      },
+    });
+    await service.refresh("crypto");
+    expect(calls).toHaveLength(4);
+    await service.refresh("crypto");
+    expect(calls).toHaveLength(4);
+    await Promise.all([
+      service.refresh("crypto", true),
+      service.refresh("crypto", true),
+    ]);
+    expect(calls).toHaveLength(7);
+    expect(calls.slice(4).some((url) => url.includes("frankfurter"))).toBe(
+      true,
+    );
+    expect(calls.slice(4).some((url) => url.includes("binance"))).toBe(true);
+    expect(calls.slice(4).some((url) => url.includes("kraken"))).toBe(true);
+  });
+  it("manual refresh preserves provider backoff after a failed request", async () => {
+    let calls = 0;
+    const service = createRateService({
+      storage: memory(),
+      now: () => 1000000,
+      jitter: () => 0,
+      get: async () => {
+        calls++;
+        throw new FetchError("HTTP 429", 120000);
+      },
+    });
+    await service.refresh("fiat", true);
+    await service.refresh("fiat", true);
+    expect(calls).toBe(1);
+  });
   it("deduplicates concurrent consumers and caches one atomic snapshot", async () => {
     const calls: string[] = [];
     let n = 1000000;
